@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phoenix AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">P</div>
+  <h1>Phoenix <span>v1.0</span></h1>
+  <div class="status-dot" id="statusDot"></div>
+</header>
+
+<div class="emotion-bar">
+  Detected emotion:
+  <span class="emotion-badge emotion-neutral" id="emotionBadge">neutral</span>
+  <span id="toneHint"></span>
+</div>
+
+<div id="messages"></div>
+
+<div class="input-area">
+  <textarea id="input" placeholder="Type a message..." rows="1"></textarea>
+  <button id="sendBtn" onclick="sendMessage()">Send</button>
+</div>
+
+<div class="sidebar-toggle" onclick="toggleFacts()" title="Known facts">🧠</div>
+
+<div class="facts-panel" id="factsPanel">
+  <button class="close-btn" onclick="toggleFacts()">✕</button>
+  <h3>What Phoenix knows about you</h3>
+  <div id="factsList"><p class="no-facts">Nothing yet — tell me about yourself!</p></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
