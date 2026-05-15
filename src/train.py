@@ -14,7 +14,7 @@ random.seed(SEED)
 torch.manual_seed(SEED)
 
 # ── Config ────────────────────────────────────────────────────────────────────
-EPOCHS          = 1900
+EPOCHS          = 3
 BATCH_SIZE      = 128
 LR              = 3e-4
 TEACHER_FORCING = 0.9
