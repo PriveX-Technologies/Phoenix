@@ -1,0 +1,25 @@
+# Phoenix AI — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core ML ────────────────────────────────────────────────────────────────────
+torch>=2.0.0            # LSTM model (model.py, train.py, inference.py)
+gensim>=4.3.0           # Word2Vec embeddings for train.py (optional but recommended)
+
+# ── Transformer fine-tuning (fine_tune.py) ────────────────────────────────────
+transformers>=4.38.0    # DialoGPT / AutoModelForCausalLM
+datasets>=2.18.0        # HuggingFace datasets for fine_tune.py + prepare_data.py
+accelerate>=0.27.0      # Required by Trainer in newer transformers
+
+# ── Web server ────────────────────────────────────────────────────────────────
+flask>=3.0.0            # web_ui.py — Flask REST API
+flask-cors>=4.0.0       # CORS (alternative to manual headers — optional)
+
+# ── Training data ─────────────────────────────────────────────────────────────
+tqdm>=4.66.0            # Progress bars in dataset_builder.py / train.py
+
+# ── Storage ───────────────────────────────────────────────────────────────────
+# sqlite3 is built into Python — no install needed (memory.py)
+
+# ── Optional / dev ────────────────────────────────────────────────────────────
+# numpy>=1.24.0         # usually pulled in by torch
+# requests>=2.31.0      # useful for testing the API

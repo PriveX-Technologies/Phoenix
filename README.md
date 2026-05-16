@@ -1,255 +1,201 @@
-# 🔥 Phoenix
-> *A long-term AI system designed to evolve toward human-like intelligence and real-world capability.*
+# 🔥 Phoenix AI
 
----
-## 🔥 Phoenix Training Update
-
-<p align="center">
-  <img src="assets/readme_img/update.png" width="1000"/>
-</p>
-
-
-> Phoenix intensely staring at the training loss for 23 business hours straight while pretending everything is under control 🧠🔥
-
----
-
-## 🧠 Overview
-
-Phoenix is an AI system being built from scratch with the goal of developing a human-like intelligence that can think, learn, remember, and act.
-
-Unlike typical AI projects that rely on external APIs, Phoenix focuses on understanding and building intelligence at the core level — step by step — from basic neural networks to advanced autonomous systems.
-
----
-
-## 🔮 Vision
-
-Phoenix aims to become an intelligent system capable of:
-
-- 💬 Natural human-like communication
-- 🧠 Learning from experience and adapting over time
-- 🔁 Memory-driven reasoning and context awareness
-- ⚙️ Performing tasks on devices (file system, apps, automation)
-- 🤖 Interacting with physical systems (robotics, sensors, real-world actions)
-
-The long-term goal is to create a unified AI that operates both as:
-- a **software agent (on devices)**
-- and a **physical agent (in robotics systems)**
-
----
-
-## ⚡ Current Capabilities
-
-- Natural conversation chatbot 💬
-- LSTM seq2seq model with Attention mechanism 🧠
-- Bidirectional encoder + attention decoder architecture 🔀
-- Word2Vec pretrained embeddings 📐
-- Custom dataset training pipeline 📊
-- Short-term memory system (context-aware replies) 🔁
-- **Real-time continuous learning** (live weight updates per conversation turn) ⚡
-- Automatic dataset growth from approved conversations 📈
-- **Emotion detection & tone adaptation** (sad, angry, anxious, happy, confused) 🎭
-- **Long-term persistent memory** (SQLite — survives restarts, stores user facts) 🗄️
-- **Smart response filtering** (6-stage quality pipeline, best-of-3 candidate selection) 🎯
-- **Web UI** (dark terminal-aesthetic chat interface with emotion badges) 🌐
-- One-click launch with auto data prep + training + browser open 🚀
-- Fully local execution — no API dependency ⚙️
-
----
-
-## 🛠️ Tech Stack
-
-- Python 🐍
-- PyTorch 🔥
-- LSTM Seq2Seq + Bahdanau Attention
-- Word2Vec (gensim)
-- SQLite (long-term memory)
-- Flask (web UI)
-- Custom tokenizer & vocabulary system
-
----
-
-## 🚀 Run Phoenix
-
-```bash
-pip install torch tqdm gensim flask datasets
-python main.py
-```
-
-First run automatically:
-1. Downloads & prepares training data
-2. Trains the model
-3. Launches the web UI
-4. Opens your browser at `http://localhost:5000`
-
-### Web UI Features
-
-| Feature | Description |
-|---------|-------------|
-| 🎭 Emotion badge | Shows detected emotion in real time |
-| 🟢 Learn dot | Green = Phoenix learned this turn, Red = rejected |
-| 🧠 Facts panel | Click brain icon to see what Phoenix knows about you |
-| 💬 Typing indicator | Animated indicator while Phoenix generates |
-
-### CLI Commands (if using `inference.py` directly)
-
-| Command | Action |
-|---------|--------|
-| `exit` | Quit and save model |
-| `/reset` | Clear session memory |
-| `/memory` | View recent conversation turns |
-| `/save` | Manually save model checkpoint |
-| `/stats` | Show memory DB stats and known facts |
+A cinematic, cyberpunk AI companion with a custom LSTM seq2seq model,
+optional DialoGPT fine-tuning, emotion detection, SQLite memory, and a
+beautiful dark-UI frontend that talks directly to your local Flask backend.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-Phoenix/
-├── main.py                  # One-click launcher (data → train → web UI → browser)
+phoenix/
+├── src/
+│   ├── model.py          — LSTM Encoder-Decoder + Attention
+│   ├── dataset.py        — Vocab builder + tokenizer + pair loader
+│   ├── train.py          — Full training loop (Word2Vec init, val, checkpoint)
+│   ├── inference.py      — Chat engine: LSTM → Transformer → rule-based fallback
+│   ├── emotion.py        — Regex emotion detector + temperature/tone mapping
+│   ├── memory.py         — SQLite memory: facts, turns, sessions
+│   ├── filters.py        — Response quality filter + scorer
+│   ├── fine_tune.py      — Fine-tune DialoGPT-medium on your data
+│   ├── prepare_data.py   — Download DailyDialog / Cornell / BlendedSkillTalk
+│   ├── dataset_builder.py— Expanded dataset builder (6 sources + seed data)
+│   ├── generate_data.py  — Hand-crafted training pair generator
+│   └── web_ui.py         — Flask REST API (chat, facts, stats, history, save…)
 ├── data/
-│   ├── real_data.txt        # Training dataset (grows over time)
-│   └── phoenix_memory.db   # Long-term memory (SQLite)
+│   └── real_data.txt     — Training pairs (input=output, one per line)
 ├── models/
-│   └── phoenix.pt           # Saved model checkpoint
-└── src/
-    ├── dataset.py           # Tokenizer, vocab, encode/decode
-    ├── model.py             # Encoder, Attention, Decoder, PhoenixModel
-    ├── train.py             # Training loop with continuous learning support
-    ├── inference.py         # Chat loop with emotion + memory + filtering
-    ├── prepare_data.py      # Multi-source dataset downloader + seed data
-    ├── emotion.py           # Emotion detection & temperature adaptation
-    ├── memory.py            # SQLite long-term memory & fact extraction
-    ├── filters.py           # 6-stage response quality filter
-    └── web_ui.py            # Flask web interface
+│   ├── phoenix.pt        — Trained LSTM checkpoint
+│   └── phoenix_transformer/  — Fine-tuned DialoGPT (optional)
+├── frontend/
+│   └── phoenix.html      — Full cyberpunk UI (open in browser)
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-# 🧭 Phoenix — TODO
+## 🚀 Quick Start
 
-## 🧠 Core AI
-- ✅ Basic neural network
-- ✅ Training loop
-- ✅ Inference system
-- ✅ Text dataset support
-- ✅ LSTM model
-- ✅ Basic chatbot
-- ✅ Seq2Seq architecture
-- ✅ Attention mechanism
-- ✅ Word2Vec embeddings
-- ⬜ Transformer-based model (GPT-style)
-- ⬜ Fine-tuning pipeline
+### 1. Install dependencies
+```bash
+pip install -r requirements.txt
+```
 
----
+### 2. Build training data
+```bash
+# Option A — fast seed + online datasets (recommended):
+python src/dataset_builder.py
 
-## 💬 Conversation System
-- ✅ Simple responses
-- ✅ Full sentence generation
-- ✅ Context-aware dialogue (memory-based context)
-- ✅ Better response ranking (best-of-3 candidate scoring)
-- ⬜ Beam search decoding
+# Option B — hand-crafted pairs only (offline, no downloads):
+python src/generate_data.py
 
----
+# Option C — original prepare_data.py (Cornell + DailyDialog):
+python src/prepare_data.py
+```
 
-## 🧠 Memory System
-- ✅ Short-term memory (conversation context)
-- ✅ Long-term memory (SQLite database)
-- ✅ Smart memory filtering (6-stage quality filter)
-- ✅ Context-driven responses (profile + history injection)
-- ⬜ Semantic memory search (retrieve relevant past turns)
+### 3. Train the LSTM model
+```bash
+python src/train.py
+# → saves models/phoenix.pt
+# Typical: 3 epochs, ~5 min on CPU for 15k pairs
+```
 
----
+### 4. (Optional) Fine-tune DialoGPT
+```bash
+python src/fine_tune.py
+# → saves models/phoenix_transformer/
+# Requires GPU for reasonable speed
+```
 
-## 🔁 Learning System
-- ✅ Offline training loop
-- ✅ Continuous learning (resume from checkpoint)
-- ✅ Real-time online learning (live weight updates)
-- ✅ Automatic dataset growth from conversations
-- ⬜ Reinforcement learning (reward model)
-- ⬜ Continuous learning without catastrophic forgetting (EWC)
+### 5. Start the Flask backend
+```bash
+python src/web_ui.py
+# → http://localhost:5000
+```
 
----
-
-## 🎭 Emotion & Personality
-- ✅ Emotion detection (sad, angry, anxious, happy, confused, neutral)
-- ✅ Temperature adaptation per emotion
-- ✅ Tone-aware context injection
-- ⬜ Personality system (persistent character traits)
-- ⬜ Emotion simulation (Phoenix expresses its own state)
-- ⬜ Mood tracking over time
+### 6. Open the frontend
+Open `frontend/phoenix.html` directly in your browser.
+- Make sure **"Use Local Phoenix Model"** is ON in Settings
+- The backend URL is `http://localhost:5000` (change in the HTML if needed)
 
 ---
 
-## 🧹 NLP Improvements
-- ✅ Word2Vec embeddings
-- ⬜ Unknown word handling (subword tokenization)
-- ⬜ Spelling correction
-- ⬜ Tokenization upgrade (BPE / SentencePiece)
-- ⬜ GloVe / BERT-style embeddings
+## 🌐 API Endpoints
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/chat` | Send a message, get `{reply, emotion, tone_hint, learned, new_facts, score}` |
+| GET | `/facts` | All extracted facts from memory.py |
+| GET | `/stats` | Memory stats: `{total_turns, total_facts, sessions}` |
+| GET | `/history` | Recent turns for current session |
+| GET | `/memory?n=20` | Last N conversation turns |
+| POST | `/reset_session` | Clear current session memory (keeps facts) |
+| POST | `/save` | Force-save LSTM checkpoint |
+| GET | `/status` | Backend health: `{lstm_loaded, transformer_loaded, session_id, approved_count}` |
 
 ---
 
-## 📊 Data Pipeline
-- ✅ Local seed dataset (always available, no internet)
-- ✅ Automated dataset loader (DailyDialog, BlendedSkillTalk, Cornell)
-- ✅ Data cleaning & preprocessing
-- ✅ Multi-source fallback (tries mirrors, never fails silently)
-- ⬜ Large-scale dataset integration
-- ⬜ Synthetic data generation via LLM
+## 💡 Frontend Features
+
+- 🔥 **Dual-mode**: Phoenix LSTM backend OR Claude API fallback (toggle in Settings)
+- 🧠 **Live memory panel**: see facts extracted by `memory.py` in real-time
+- 📜 **History panel**: browse all turns stored in SQLite this session
+- 😊 **Emotion-reactive UI**: colours sync with `emotion.py` output
+- 💾 **Auto-learn badges**: see which turns were reinforced by online learning
+- ★ **Score display**: `filters.py` quality score shown on every reply
+- 🔊 **Voice I/O**: SpeechRecognition + SpeechSynthesis APIs
+- 📎 **Image upload**: send images for vision (Claude fallback mode)
+- 🎨 **5 colour themes**: Purple, Cyan, Pink, Amber, Green
+
+### Slash commands (type in chat)
+| Command | Action |
+|---------|--------|
+| `/reset` | Clear session memory on backend + frontend |
+| `/stats` | Show memory stats in chat |
+| `/facts` | Open the facts panel |
+| `/help` | List all commands |
 
 ---
 
-## ⚙️ System Architecture
-- ✅ Auto run (main.py)
-- ✅ Auto data preparation
-- ✅ Auto training on first run
-- ✅ Auto browser launch
-- ✅ Model versioning (best checkpoint saving)
-- ⬜ Configuration system (config.yaml)
-- ⬜ Logging & monitoring dashboard
+## 🧠 How inference.py Works
+
+```
+User input
+    ↓
+emotion.py  →  emotion + temperature + tone_hint
+    ↓
+memory.py   →  profile string + conversation context
+    ↓
+LSTM model  →  3 candidate replies (beam-like sampling)
+    ↓
+filters.py  →  quality check + score each candidate
+    ↓
+Best reply? ──yes──→ return + online_update() + save_to_dataset()
+    ↓ no
+transformer_reply()  →  fine-tuned DialoGPT (if available)
+    ↓ garbage/missing
+rule_based_reply()   →  keyword-matched clean fallback
+```
 
 ---
 
-## 🌐 Interface Layer
-- ✅ Web UI (Flask, dark theme, emotion badges, facts panel)
-- ✅ CLI chat interface
-- ⬜ REST API (FastAPI)
-- ⬜ Mobile app integration
-- ⬜ Voice interface (speech-to-text + TTS)
-- ⬜ Real-time streaming responses
+## 🔧 Configuration
+
+Edit top of `inference.py`:
+```python
+LR_ONLINE  = 5e-5    # online learning rate
+SAVE_EVERY = 10      # checkpoint every N approved turns
+```
+
+Edit top of `train.py`:
+```python
+EPOCHS     = 3
+BATCH_SIZE = 128
+LR         = 3e-4
+EMBED_SIZE = 64      # ← never change after first train
+HIDDEN_SIZE= 128     # ← never change after first train
+```
+
+In `phoenix.html` (top of script block):
+```javascript
+const BACKEND_URL = "http://localhost:5000";  // your Flask server
+const USE_BACKEND = true;   // false = Claude API fallback
+```
 
 ---
 
-## 🧩 Intelligence Features
-- ✅ User fact extraction (name, age, location, job, preferences)
-- ✅ Profile-aware responses
-- ⬜ Goal-based task execution
-- ⬜ Command interpretation system
-- ⬜ Multi-turn reasoning
+## 📈 Continuous Learning
+
+Every approved reply is:
+1. Used for one gradient step via `online_update()` (live weight update)
+2. Appended to `data/real_data.txt` (grows your training set)
+3. Stored in SQLite via `memory.py` (conversation history)
+
+After collecting more data, re-run `train.py` to retrain from scratch with
+the expanded dataset. The checkpoint format is stable — vocab changes trigger
+a safe rename of the old model.
 
 ---
 
-## 💻 Device Control (Software Agent)
-- ⬜ File system control
-- ⬜ App launching & automation
-- ⬜ OS-level command execution
-- ⬜ Task scheduling
+## 🛠 Troubleshooting
+
+**"Cannot reach Phoenix backend"**
+→ Run `python src/web_ui.py` first. Check port 5000 is free.
+
+**"Phoenix checkpoint not found"**
+→ Run `python src/train.py` to generate `models/phoenix.pt`.
+
+**Replies are garbage / all `<unk>`**
+→ Vocab mismatch. Delete `models/phoenix.pt` and retrain.
+
+**Voice not working**
+→ Use Chrome or Edge. Firefox has limited SpeechSynthesis support.
+
+**CORS errors in browser console**
+→ Already handled by `web_ui.py`'s `@app.after_request` CORS headers.
 
 ---
 
-## 🤖 Robotics Integration (Physical Agent)
-- ⬜ Camera vision (object detection)
-- ⬜ Speech input/output
-- ⬜ Motor & actuator control
-- ⬜ Sensor integration
-
----
-
-## 🧠 Advanced Systems
-- ⬜ Reinforcement learning
-- ⬜ Multi-modal AI (text + image + audio)
-- ⬜ Autonomous agent mode
-- ⬜ Wake word ("Hey Phoenix")
-- ⬜ Custom voice synthesis
-- ⬜ Animated avatar
+*Phoenix AI — Built with PyTorch, Flask, and a lot of neon purple. ✦*
