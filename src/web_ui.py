@@ -1,12 +1,15 @@
 import traceback
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from flask import after_this_request
 import os
 
-app = Flask(__name__, template_folder='../frontend', static_folder='../frontend')
+# frontend/ lives one level up from src/
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+FRONTEND_DIR = os.path.abspath(FRONTEND_DIR)
+
+app = Flask(__name__, template_folder=FRONTEND_DIR, static_folder=FRONTEND_DIR)
 app.secret_key = os.urandom(24)
 
-# ── CORS — allow the Phoenix HTML frontend (file:// or any origin) ────────────
+# ── CORS ──────────────────────────────────────────────────────────────────────
 @app.after_request
 def add_cors(response):
     response.headers["Access-Control-Allow-Origin"]  = "*"
@@ -15,13 +18,13 @@ def add_cors(response):
     return response
 
 @app.route("/", defaults={"path": ""}, methods=["OPTIONS"])
-@app.route("/<path:path>", methods=["OPTIONS"])
+@app.route("/<path:path>",             methods=["OPTIONS"])
 def options_handler(path):
     return "", 204
 
-phoenix = None
+# ── Model lazy-load ───────────────────────────────────────────────────────────
+phoenix     = None
 _load_error = None
-
 
 def get_phoenix():
     global phoenix, _load_error
@@ -32,23 +35,29 @@ def get_phoenix():
             print("✅ inference module loaded successfully.")
         except Exception as e:
             _load_error = str(e)
-            traceback.print_exc()   # ← prints the FULL stack trace to your terminal
+            traceback.print_exc()
             print(f"\n❌ inference.py failed to import: {e}\n")
     return phoenix, _load_error
 
+get_phoenix()   # eager load on startup
 
-# Eagerly load on startup so errors appear immediately in the terminal
-get_phoenix()
-
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
+@app.route("/cyber_samurai.glb")
+def serve_glb():
+    """Serve the 3-D model directly — Three.js fetches it via /cyber_samurai.glb"""
+    return send_from_directory(FRONTEND_DIR, "cyber_samurai.glb",
+                               mimetype="model/gltf-binary")
+
+
 @app.route("/<path:path>")
 def static_proxy(path):
-    return send_from_directory(app.static_folder, path)
+    return send_from_directory(FRONTEND_DIR, path)
 
 
 @app.route("/chat", methods=["POST"])
@@ -88,7 +97,6 @@ def facts():
 
 @app.route("/stats")
 def stats():
-    """Return memory statistics from memory.py."""
     try:
         from memory import memory_stats
         return jsonify({"stats": memory_stats()})
@@ -98,7 +106,6 @@ def stats():
 
 @app.route("/memory")
 def memory_turns():
-    """Return recent conversation turns, optionally filtered by session."""
     session_id = request.args.get("session_id", None)
     n          = int(request.args.get("n", 20))
     try:
@@ -111,14 +118,12 @@ def memory_turns():
 
 @app.route("/reset_session", methods=["POST"])
 def reset_session():
-    """Clear the current session memory (keeps long-term facts)."""
     inf, err = get_phoenix()
     if err or inf is None:
         return jsonify({"ok": False, "error": "Model not loaded"})
     try:
         from memory import clear_session_memory
         clear_session_memory(inf.current_session)
-        # Also reset turn counter on the inference module
         inf.turn_number = 0
         return jsonify({"ok": True, "session_id": inf.current_session})
     except Exception as e:
@@ -128,7 +133,6 @@ def reset_session():
 
 @app.route("/save", methods=["POST"])
 def save_model():
-    """Manually trigger a model checkpoint save."""
     inf, err = get_phoenix()
     if err or inf is None:
         return jsonify({"ok": False, "error": "Model not loaded"})
@@ -142,7 +146,6 @@ def save_model():
 
 @app.route("/history")
 def history():
-    """Return full conversation history for the current session."""
     inf, err = get_phoenix()
     if err or inf is None:
         return jsonify({"history": []})
@@ -160,22 +163,22 @@ def history():
 
 @app.route("/status")
 def status():
-    """Health check + model status endpoint."""
-    inf, err = get_phoenix()
-    lstm_ok   = inf is not None and inf.model is not None
+    inf, err  = get_phoenix()
+    lstm_ok   = inf is not None and inf.model   is not None
     transf_ok = inf is not None and getattr(inf, "ft_model", None) is not None
     return jsonify({
-        "ok":              err is None,
-        "error":           err,
-        "lstm_loaded":     lstm_ok,
-        "transformer_loaded": transf_ok,
-        "session_id":      getattr(inf, "current_session", None) if inf else None,
-        "approved_count":  getattr(inf, "approved_count", 0)     if inf else 0,
+        "ok":                  err is None,
+        "error":               err,
+        "lstm_loaded":         lstm_ok,
+        "transformer_loaded":  transf_ok,
+        "session_id":          getattr(inf, "current_session", None) if inf else None,
+        "approved_count":      getattr(inf, "approved_count",  0)    if inf else 0,
     })
 
 
 if __name__ == "__main__":
     print("\n🔥 Phoenix Web UI starting...")
-    print("   Open phoenix.html in your browser, or visit http://localhost:5000")
-    print("   Make sure train.py has been run to generate models/phoenix.pt\n")
+    print(f"   Serving frontend from: {FRONTEND_DIR}")
+    print("   Visit: http://localhost:5000")
+    print("   GLB:   http://localhost:5000/cyber_samurai.glb\n")
     app.run(debug=False, host="0.0.0.0", port=5000)
