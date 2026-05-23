@@ -80,6 +80,12 @@ Open `frontend/phoenix.html` directly in your browser.
 - Make sure **"Use Local Phoenix Model"** is ON in Settings
 - The backend URL is `http://localhost:5000` (change in the HTML if needed)
 
+
+### 7. Run after train 
+```bash
+Python main.py
+```
+
 ---
 
 ## 🌐 API Endpoints
