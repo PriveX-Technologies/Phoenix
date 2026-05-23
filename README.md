@@ -72,7 +72,7 @@ python src/fine_tune.py
 ### 5. Start the Flask backend
 ```bash
 python src/web_ui.py
-# → http://localhost:5000
+# → http://localhost:5000. (definitely no need just run step 7)
 ```
 
 ### 6. Open the frontend
