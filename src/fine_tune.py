@@ -14,9 +14,19 @@ model_name = "microsoft/DialoGPT-medium"
 print(f"Loading {model_name}...")
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+special_tokens = {
+    "additional_special_tokens": [
+        "<|user|>",
+        "<|assistant|>"
+    ]
+}
+
+tokenizer.add_special_tokens(special_tokens)
 tokenizer.pad_token = tokenizer.eos_token
 
 model = AutoModelForCausalLM.from_pretrained(model_name)
+model.resize_token_embeddings(len(tokenizer))
 
 # ── Load dataset ──────────────────────────────────────────────────────────────
 DATA_FILE = "data/real_data.txt"
@@ -33,7 +43,12 @@ with open(DATA_FILE, encoding="utf-8") as f:
         line = line.strip()
         if "=" in line:
             user, bot = line.split("=", 1)
-            text = f"{user.strip()} {tokenizer.eos_token} {bot.strip()} {tokenizer.eos_token}"
+            text = (
+                f"<|user|>\n"
+                f"{user.strip()}\n"
+                f"<|assistant|>\n"
+                f"{bot.strip()}\n"
+            )
             data.append({"text": text})
 
 print(f"Loaded {len(data)} conversation pairs.")
