@@ -48,11 +48,13 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/cyber_samurai.glb")
+@app.route("/assets/3dModel/cyber_samurai.glb")
 def serve_glb():
-    """Serve the 3-D model directly — Three.js fetches it via /cyber_samurai.glb"""
-    return send_from_directory(FRONTEND_DIR, "cyber_samurai.glb",
-                               mimetype="model/gltf-binary")
+    return send_from_directory(
+        os.path.join(FRONTEND_DIR, "assets", "3dModel"),
+        "cyber_samurai.glb",
+        mimetype="model/gltf-binary"
+    )
 
 
 @app.route("/<path:path>")

@@ -581,28 +581,20 @@ let modelRoot = null;
 const loader  = new THREE.GLTFLoader();
 
 // Try relative path first (when served by Flask), then absolute fallback
-const glbPath = '/cyber_samurai.glb';
+const glbPath = '/assets/3dModel/cyber_samurai.glb';
 
 loader.load(glbPath, (gltf) => {
   modelRoot = gltf.scene;
 
-  // Auto-centre and scale the model
-  const box    = new THREE.Box3().setFromObject(modelRoot);
-  const size   = new THREE.Vector3();
-  const centre = new THREE.Vector3();
-  box.getSize(size);
-  box.getCenter(centre);
 
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const scale  = 1.8 / maxDim;
-  modelRoot.scale.setScalar(scale);
+// Manual scale
+modelRoot.scale.set(1.2, 1.2, 1.2);
 
-  // Shift so feet sit on y=0
-  modelRoot.position.set(
-    -centre.x * scale,
-    -box.min.y * scale,
-    -centre.z * scale
-  );
+// Position
+modelRoot.position.set(0, 0, 0);
+
+// Rotation
+modelRoot.rotation.y = 0;
 
   // Cast shadows, improve materials
   modelRoot.traverse(child => {
