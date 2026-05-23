@@ -82,6 +82,7 @@ training_args = TrainingArguments(
     output_dir                  = "./phoenix_ft_checkpoints",
     per_device_train_batch_size = 2,
     num_train_epochs            = 3,
+    max_steps                   = 19,
     save_steps                  = 500,
     logging_steps               = 50,
     fp16                        = False,
