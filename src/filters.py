@@ -114,6 +114,7 @@ def filter_response(reply: str, user_input: str = "") -> tuple[bool, str]:
         lambda: check_coherence(words),
         lambda: check_echo(words, in_words),
         lambda: check_is_fallback(reply),
+        lambda: check_broken_sentence(words),
     ]
 
     for check in checks:
@@ -153,6 +154,22 @@ def score_response(reply: str, user_input: str = "") -> float:
 
     return max(0.0, min(1.0, score))
 
+
+
+def check_broken_sentence(words: list) -> tuple[bool, str]:
+    bad_patterns = [
+        ["i", "am", "a"],
+        ["you", "you"],
+        ["a", "lot", "you"],
+    ]
+
+    joined = " ".join(words)
+
+    for pattern in bad_patterns:
+        if " ".join(pattern) in joined:
+            return False, "broken sentence pattern"
+
+    return True, ""
 
 # ── Quick test ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":

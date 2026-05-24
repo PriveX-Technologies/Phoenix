@@ -179,9 +179,10 @@ def transformer_reply(text: str) -> str:
             attention_mask        = inputs["attention_mask"],
             max_new_tokens        = 40,
             do_sample             = True,
-            temperature           = 0.7,
-            top_p                 = 0.9,
-            repetition_penalty    = 1.3,
+            temperature           = 0.55,
+            top_p                 = 0.85,
+            repetition_penalty    = 1.6,
+            no_repeat_ngram_size  = 3,
             pad_token_id          = ft_tokenizer.eos_token_id,
             eos_token_id          = ft_tokenizer.eos_token_id,
             remove_invalid_values = True,
@@ -272,9 +273,27 @@ def respond(text: str) -> dict:
                     best_score = s
                     best_reply = candidate
 
-    # 3. Fall back to transformer if LSTM gave nothing useful
-    if best_reply is None or len(best_reply.split()) < 3:
+    # 3. Validate final reply quality
+    passed, _ = filter_response(best_reply or "", text)
+
+    # Fall back to transformer if LSTM failed
+    if (
+        best_reply is None
+        or len(best_reply.split()) < 4
+        or not passed
+    ):
         best_reply = transformer_reply(text)
+
+        # Validate transformer output too
+        passed_tf, _ = filter_response(best_reply or "", text)
+
+        # Final safety fallback
+        if (
+            best_reply is None
+            or len(best_reply.split()) < 4
+            or not passed_tf
+        ):
+            best_reply = rule_based_reply(text)
 
     return {
         "reply":       best_reply,
