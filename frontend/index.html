@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Phoenix AI</title>
+
+<!-- Three.js r128 + GLTFLoader via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<style>
+/* ── Reset & base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0a0a12;
+  --panel:     #11111e;
+  --border:    #1e1e3a;
+  --accent:    #7b5ea7;
+  --accent2:   #e8394a;
+  --text:      #e8e0f0;
+  --sub:       #8878a8;
+  --glow:      rgba(123,94,167,0.55);
+  --glow2:     rgba(232,57,74,0.45);
+  --radius:    14px;
+  --chat-w:    380px;
+}
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* ── 3-D canvas (full screen, behind everything) ─────────────────────── */
+#canvas-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+#three-canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ── Glassmorphism overlay panels ────────────────────────────────────── */
+.glass {
+  background: rgba(17,17,30,0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── Header bar ──────────────────────────────────────────────────────── */
+#header {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 24px;
+  background: rgba(10,10,18,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+#header-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 12px var(--glow);
+  flex-shrink: 0;
+}
+#header-title { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+#header-sub   { font-size: 11px; color: var(--sub); margin-top: 1px; }
+#status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+  margin-left: auto;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.5; transform:scale(0.8); }
+}
+
+/* ── Emotion badge (top-right of 3-D view) ──────────────────────────── */
+#emotion-badge {
+  position: fixed;
+  top: 74px; right: 24px;
+  z-index: 10;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: background 0.5s, color 0.5s, box-shadow 0.5s;
+  pointer-events: none;
+}
+
+/* ── AI face HUD (floats above the 3-D view, centred) ───────────────── */
+#ai-hud {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 200px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+#speaking-bar {
+  display: flex; gap: 3px; align-items: flex-end;
+  height: 28px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#speaking-bar.active { opacity: 1; }
+.bar-segment {
+  width: 5px;
+  border-radius: 3px;
+  background: linear-gradient(to top, var(--accent), var(--accent2));
+  animation: none;
+}
+.bar-segment.animate { animation: bar-dance 0.4s ease-in-out infinite alternate; }
+.bar-segment:nth-child(1)  { animation-delay: 0.00s; }
+.bar-segment:nth-child(2)  { animation-delay: 0.06s; }
+.bar-segment:nth-child(3)  { animation-delay: 0.12s; }
+.bar-segment:nth-child(4)  { animation-delay: 0.18s; }
+.bar-segment:nth-child(5)  { animation-delay: 0.24s; }
+.bar-segment:nth-child(6)  { animation-delay: 0.30s; }
+.bar-segment:nth-child(7)  { animation-delay: 0.36s; }
+.bar-segment:nth-child(8)  { animation-delay: 0.42s; }
+.bar-segment:nth-child(9)  { animation-delay: 0.48s; }
+.bar-segment:nth-child(10) { animation-delay: 0.54s; }
+@keyframes bar-dance {
+  from { height: 4px; }
+  to   { height: 28px; }
+}
+
+#thinking-ring {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: var(--accent2);
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: spin 0.9s linear infinite;
+}
+#thinking-ring.active { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Chat panel ──────────────────────────────────────────────────────── */
+#chat-panel {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: var(--chat-w);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: rgba(10,10,18,0.82);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+#chat-header {
+  padding: 70px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px; color: var(--sub);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+#messages::-webkit-scrollbar { width: 4px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Message bubbles */
+.msg {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  animation: pop-in 0.22s cubic-bezier(.34,1.56,.64,1);
+  word-break: break-word;
+}
+@keyframes pop-in {
+  from { opacity:0; transform: scale(0.88) translateY(6px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.msg.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--accent), #5b3d8c);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg.bot {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.msg.bot .meta {
+  display: flex; gap: 6px; align-items: center;
+  margin-top: 6px;
+  font-size: 10px; color: var(--sub);
+}
+.msg.bot .meta .learned-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4ade80;
+}
+
+/* Typing indicator */
+#typing-indicator {
+  display: none;
+  align-self: flex-start;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  gap: 5px;
+  align-items: center;
+}
+#typing-indicator.show { display: flex; }
+.typing-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--sub);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-bounce {
+  0%,80%,100% { transform: translateY(0); opacity:0.4; }
+  40%         { transform: translateY(-6px); opacity:1; }
+}
+
+/* Input area */
+#input-area {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+#user-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  min-height: 42px;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: border-color 0.2s;
+}
+#user-input:focus { border-color: var(--accent); }
+#user-input::placeholder { color: var(--sub); }
+#send-btn {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+#send-btn:hover  { transform: scale(1.06); box-shadow: 0 0 14px var(--glow); }
+#send-btn:active { transform: scale(0.96); }
+
+/* ── Left sidebar — memory & facts ──────────────────────────────────── */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 220px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: rgba(10,10,18,0.72);
+  backdrop-filter: blur(18px);
+  padding: 70px 12px 12px;
+  gap: 12px;
+  overflow-y: auto;
+}
+.sidebar-section { font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.fact-item {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  display: flex; gap: 6px;
+}
+.fact-key  { color: var(--accent); font-weight: 600; }
+.fact-val  { color: var(--text); }
+
+#stat-box {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+.stat-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.stat-label { color: var(--sub); }
+.stat-val   { color: var(--text); font-weight: 600; }
+
+/* ── Reset button ─────────────────────────────────────────────────────── */
+#reset-btn {
+  margin-top: auto;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(232,57,74,0.1);
+  color: var(--accent2);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+#reset-btn:hover { background: rgba(232,57,74,0.22); }
+
+/* ── Emotion colours ─────────────────────────────────────────────────── */
+.emo-happy    { background:rgba(74,222,128,0.15); color:#4ade80; box-shadow:0 0 10px rgba(74,222,128,0.2); }
+.emo-sad      { background:rgba(96,165,250,0.15); color:#60a5fa; box-shadow:0 0 10px rgba(96,165,250,0.2); }
+.emo-angry    { background:rgba(248,113,113,0.15);color:#f87171; box-shadow:0 0 10px rgba(248,113,113,0.2);}
+.emo-anxious  { background:rgba(251,191,36,0.15); color:#fbbf24; box-shadow:0 0 10px rgba(251,191,36,0.2); }
+.emo-confused { background:rgba(192,132,252,0.15);color:#c084fc; box-shadow:0 0 10px rgba(192,132,252,0.2);}
+.emo-neutral  { background:rgba(123,94,167,0.15); color:#a78bfa; box-shadow:0 0 10px rgba(123,94,167,0.2); }
+
+/* ── Responsive: hide sidebar on narrow screens ───────────────────────── */
+@media (max-width: 900px) {
+  #sidebar { display: none; }
+}
+@media (max-width: 640px) {
+  :root { --chat-w: 100vw; }
+  #chat-panel { border-left: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────────────── -->
+<div id="header">
+  <div id="header-avatar">🔥</div>
+  <div>
+    <div id="header-title">Phoenix AI</div>
+    <div id="header-sub">Cyber Samurai · Neural Companion</div>
+  </div>
+  <div id="status-dot"></div>
+</div>
+
+<!-- ── 3-D Canvas ────────────────────────────────────────────────────── -->
+<div id="canvas-wrap">
+  <canvas id="three-canvas"></canvas>
+</div>
+
+<!-- ── AI HUD (speaking waveform + thinking ring) ───────────────────── -->
+<div id="ai-hud">
+  <div id="thinking-ring"></div>
+  <div id="speaking-bar">
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+    <div class="bar-segment" style="height:4px"></div>
+  </div>
+</div>
+
+<!-- ── Emotion badge ─────────────────────────────────────────────────── -->
+<div id="emotion-badge" class="emo-neutral">😐 neutral</div>
+
+<!-- ── Left sidebar ──────────────────────────────────────────────────── -->
+<div id="sidebar">
+  <div class="sidebar-section">Known About You</div>
+  <div id="facts-list"></div>
+
+  <div class="sidebar-section" style="margin-top:12px">Memory Stats</div>
+  <div id="stat-box">
+    <div class="stat-row"><span class="stat-label">Turns</span><span class="stat-val" id="s-turns">0</span></div>
+    <div class="stat-row"><span class="stat-label">Facts</span><span class="stat-val" id="s-facts">0</span></div>
+    <div class="stat-row"><span class="stat-label">Sessions</span><span class="stat-val" id="s-sessions">0</span></div>
+  </div>
+
+  <button id="reset-btn">🗑 Reset Session</button>
+</div>
+
+<!-- ── Chat panel ─────────────────────────────────────────────────────── -->
+<div id="chat-panel">
+  <div id="chat-header">Conversation</div>
+  <div id="messages">
+    <div class="msg bot">
+      Hey! I'm Phoenix 🔥 — your cyber companion. What's on your mind?
+      <div class="meta"><span>neutral</span></div>
+    </div>
+    <div id="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  </div>
+  <div id="input-area">
+    <textarea id="user-input" placeholder="Type a message…" rows="1"></textarea>
+    <button id="send-btn">➤</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     THREE.JS SCENE — Procedural animation of the static cyber_samurai
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+'use strict';
+
+// ── Scene setup ───────────────────────────────────────────────────────
+const canvas   = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+renderer.outputEncoding    = THREE.sRGBEncoding;
+renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.position.set(0, 1.1, 3.8);
+
+// Fog for atmosphere
+scene.fog = new THREE.FogExp2(0x0a0a12, 0.055);
+
+// ── Resize ────────────────────────────────────────────────────────────
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas);
+resize();
+
+// ── OrbitControls (optional user orbit) ─────────────────────────────
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.minDistance    = 1.5;
+controls.maxDistance    = 7;
+controls.maxPolarAngle  = Math.PI / 1.6;
+controls.autoRotate     = false;
+
+// ── Lighting ──────────────────────────────────────────────────────────
+const ambLight = new THREE.AmbientLight(0x2a1a4a, 1.2);
+scene.add(ambLight);
+
+// Key light — purple-ish
+const keyLight = new THREE.DirectionalLight(0x9b6ed4, 2.5);
+keyLight.position.set(3, 5, 4);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+scene.add(keyLight);
+
+// Rim light — red/orange from behind
+const rimLight = new THREE.DirectionalLight(0xff4455, 1.8);
+rimLight.position.set(-3, 2, -3);
+scene.add(rimLight);
+
+// Fill light — cool blue from left
+const fillLight = new THREE.DirectionalLight(0x334488, 1.0);
+fillLight.position.set(-4, 1, 3);
+scene.add(fillLight);
+
+// Ground bounce
+const bounceLight = new THREE.PointLight(0x7b5ea7, 0.8, 5);
+bounceLight.position.set(0, -0.5, 1);
+scene.add(bounceLight);
+
+// ── Accent point lights (emotion-driven) ─────────────────────────────
+const accentLight1 = new THREE.PointLight(0x7b5ea7, 3.0, 4);
+accentLight1.position.set(0, 1.5, 1.5);
+scene.add(accentLight1);
+
+const accentLight2 = new THREE.PointLight(0xe8394a, 1.5, 3);
+accentLight2.position.set(-1, 0.5, 1);
+scene.add(accentLight2);
+
+// ── Ground plane ──────────────────────────────────────────────────────
+const gridHelper = new THREE.GridHelper(12, 24, 0x1a1030, 0x120e25);
+gridHelper.position.y = -0.01;
+scene.add(gridHelper);
+
+const groundGeo  = new THREE.PlaneGeometry(10, 10);
+const groundMat  = new THREE.MeshStandardMaterial({
+  color: 0x06060f, roughness: 0.9, metalness: 0.2,
+  transparent: true, opacity: 0.85
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ── Particle system (floating energy orbs) ────────────────────────────
+const PARTICLE_COUNT = 180;
+const particleGeo    = new THREE.BufferGeometry();
+const pPos  = new Float32Array(PARTICLE_COUNT * 3);
+const pVel  = new Float32Array(PARTICLE_COUNT * 3);   // velocity
+const pPhase= new Float32Array(PARTICLE_COUNT);         // random phase
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  pPos[i*3]   = (Math.random() - 0.5) * 5;
+  pPos[i*3+1] = Math.random() * 3.5 - 0.2;
+  pPos[i*3+2] = (Math.random() - 0.5) * 4;
+  pVel[i*3]   = (Math.random() - 0.5) * 0.004;
+  pVel[i*3+1] = Math.random() * 0.005 + 0.001;
+  pVel[i*3+2] = (Math.random() - 0.5) * 0.003;
+  pPhase[i]   = Math.random() * Math.PI * 2;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  color: 0x9b5de5, size: 0.025, transparent: true,
+  opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// ── Energy ring (halo around model base) ─────────────────────────────
+const ringGeo = new THREE.TorusGeometry(0.7, 0.012, 8, 80);
+const ringMat = new THREE.MeshBasicMaterial({
+  color: 0x7b5ea7, transparent: true, opacity: 0.6,
+  blending: THREE.AdditiveBlending
+});
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = Math.PI / 2;
+ring.position.y  = 0.02;
+scene.add(ring);
+
+// Second ring (counter-rotate)
+const ring2 = ring.clone();
+ring2.material = new THREE.MeshBasicMaterial({
+  color: 0xe8394a, transparent: true, opacity: 0.4,
+  blending: THREE.AdditiveBlending
+});
+ring2.scale.setScalar(1.25);
+scene.add(ring2);
+
+// ── Load the GLB model ────────────────────────────────────────────────
+let modelRoot = null;
+const loader  = new THREE.GLTFLoader();
+
+// Try relative path first (when served by Flask), then absolute fallback
+const glbPath = '/assets/3dModel/cyber_samurai.glb';
+
+loader.load(glbPath, (gltf) => {
+  modelRoot = gltf.scene;
+
+
+// Manual scale
+modelRoot.scale.set(1.2, 1.2, 1.2);
+
+// Position
+modelRoot.position.set(0, 0, 0);
+
+// Rotation
+modelRoot.rotation.y = 0;
+
+  // Cast shadows, improve materials
+  modelRoot.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow    = true;
+      child.receiveShadow = true;
+      if (child.material) {
+        child.material.envMapIntensity = 0.8;
+        // Bump up metalness/roughness for a cyber look
+        if ('metalness' in child.material) child.material.metalness  = Math.max(child.material.metalness, 0.4);
+        if ('roughness' in child.material) child.material.roughness  = Math.min(child.material.roughness, 0.55);
+      }
+    }
+  });
+
+  scene.add(modelRoot);
+  console.log('✅ cyber_samurai.glb loaded');
+}, undefined, (err) => {
+  console.error('GLB load error:', err);
+  // Fallback placeholder — a glowing capsule so the UI still works
+  const capGeo = new THREE.CylinderGeometry(0.22, 0.22, 1.6, 16);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0x7b5ea7, emissive: 0x3a1060, metalness:0.7, roughness:0.3 });
+  const cap    = new THREE.Mesh(capGeo, capMat);
+  cap.position.y = 0.8;
+  modelRoot = new THREE.Group();
+  modelRoot.add(cap);
+  scene.add(modelRoot);
+});
+
+// ── Animation state machine ───────────────────────────────────────────
+const anim = {
+  emotion:       'neutral',
+  isSpeaking:    false,
+  isThinking:    false,
+  speakTimer:    0,
+
+  // Procedural targets (lerped in RAF)
+  bobAmp:        0.04,     // vertical idle bob amplitude
+  bobSpeed:      1.2,      // idle bob frequency
+  swayAmp:       0.008,    // left-right sway
+  scaleTarget:   1.0,      // scale pulse on speaking
+  rotTarget:     0.0,      // Y-rotation lean
+  glowIntensity: 1.0,      // accent light intensity multiplier
+  particleSpeed: 1.0,
+
+  // Current values (smooth lerp outputs)
+  bobY:          0,
+  scaleNow:      1.0,
+  rotNow:        0.0,
+  glowNow:       1.0,
+};
+
+// ── Emotion colour palette for 3-D scene ─────────────────────────────
+const EMOTION_SCENE = {
+  neutral:  { accent1: 0x7b5ea7, accent2: 0xe8394a, particle: 0x9b5de5, bobAmp: 0.04,  bobSpeed: 1.2,  glowMul: 1.0,  sway: 0.008 },
+  happy:    { accent1: 0x4ade80, accent2: 0xfbbf24, particle: 0x4ade80, bobAmp: 0.07,  bobSpeed: 1.9,  glowMul: 1.8,  sway: 0.018 },
+  sad:      { accent1: 0x60a5fa, accent2: 0x3b82f6, particle: 0x60a5fa, bobAmp: 0.018, bobSpeed: 0.65, glowMul: 0.5,  sway: 0.003 },
+  angry:    { accent1: 0xef4444, accent2: 0xff6600, particle: 0xf87171, bobAmp: 0.035, bobSpeed: 2.4,  glowMul: 2.2,  sway: 0.025 },
+  anxious:  { accent1: 0xfbbf24, accent2: 0xf59e0b, particle: 0xfde68a, bobAmp: 0.055, bobSpeed: 2.0,  glowMul: 1.4,  sway: 0.022 },
+  confused: { accent1: 0xc084fc, accent2: 0xa855f7, particle: 0xc084fc, bobAmp: 0.03,  bobSpeed: 0.9,  glowMul: 0.9,  sway: 0.012 },
+};
+
+function applyEmotion(emotion) {
+  const cfg = EMOTION_SCENE[emotion] || EMOTION_SCENE.neutral;
+  anim.emotion   = emotion;
+  anim.bobAmp    = cfg.bobAmp;
+  anim.bobSpeed  = cfg.bobSpeed;
+  anim.swayAmp   = cfg.sway;
+  anim.glowIntensity = cfg.glowMul;
+  anim.particleSpeed = cfg.glowMul;
+
+  // Update light colours
+  accentLight1.color.setHex(cfg.accent1);
+  accentLight2.color.setHex(cfg.accent2);
+  particleMat.color.setHex(cfg.particle);
+  ring.material.color.setHex(cfg.accent1);
+  ring2.material.color.setHex(cfg.accent2);
+}
+
+// ── Speaking state ────────────────────────────────────────────────────
+function setSpeaking(on) {
+  anim.isSpeaking = on;
+
+  const bar = document.getElementById('speaking-bar');
+  bar.classList.toggle('active', on);
+  bar.querySelectorAll('.bar-segment').forEach(s => s.classList.toggle('animate', on));
+
+  if (on) {
+    anim.scaleTarget = 1.038;
+    anim.rotTarget   = (Math.random() - 0.5) * 0.12;  // slight head turn
+  } else {
+    anim.scaleTarget = 1.0;
+    anim.rotTarget   = 0.0;
+  }
+}
+
+function setThinking(on) {
+  anim.isThinking = on;
+  document.getElementById('thinking-ring').classList.toggle('active', on);
+
+  if (on) {
+    anim.rotTarget = 0.18;   // look away slightly while "thinking"
+    anim.scaleTarget = 0.97;
+  }
+}
+
+// ── Clock & RAF loop ──────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let   t     = 0;
+
+function lerp(a, b, alpha) { return a + (b - a) * alpha; }
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  t += dt;
+
+  controls.update();
+
+  // ── Particle drift ───────────────────────────────────────────────
+  const pAttr = particleGeo.getAttribute('position');
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    pAttr.array[i*3]   += pVel[i*3]   * anim.particleSpeed;
+    pAttr.array[i*3+1] += pVel[i*3+1] * anim.particleSpeed;
+    pAttr.array[i*3+2] += pVel[i*3+2] * anim.particleSpeed;
+    // Wrap vertically
+    if (pAttr.array[i*3+1] > 3.8) {
+      pAttr.array[i*3]   = (Math.random() - 0.5) * 5;
+      pAttr.array[i*3+1] = -0.2;
+      pAttr.array[i*3+2] = (Math.random() - 0.5) * 4;
+    }
+  }
+  pAttr.needsUpdate = true;
+
+  // ── Energy rings ─────────────────────────────────────────────────
+  ring.rotation.z  += dt * 0.8 * (anim.isSpeaking ? 2.5 : 1.0);
+  ring2.rotation.z -= dt * 0.5 * (anim.isSpeaking ? 2.0 : 1.0);
+  ring.material.opacity  = 0.35 + Math.sin(t * 2.2) * 0.18;
+  ring2.material.opacity = 0.25 + Math.sin(t * 1.6 + 1.0) * 0.14;
+
+  // Pulse ring size on speaking
+  const rScale = 1.0 + (anim.isSpeaking ? Math.sin(t * 8) * 0.04 : 0);
+  ring.scale.set(rScale, rScale, rScale);
+
+  // ── Accent lights pulse ───────────────────────────────────────────
+  anim.glowNow = lerp(anim.glowNow, anim.glowIntensity, 0.04);
+  const pulse  = anim.glowNow * (1.0 + Math.sin(t * (anim.isSpeaking ? 7 : 2.2)) * 0.22);
+  accentLight1.intensity = 3.0  * pulse;
+  accentLight2.intensity = 1.5  * pulse;
+  bounceLight.intensity  = 0.8  * anim.glowNow;
+
+  // ── Model procedural animation ────────────────────────────────────
+  if (modelRoot) {
+    // Smooth scale
+    anim.scaleNow = lerp(anim.scaleNow, anim.scaleTarget, 0.08);
+    modelRoot.scale.setScalar(anim.scaleNow);
+
+    // Bob
+    const bobY = Math.sin(t * anim.bobSpeed) * anim.bobAmp;
+    // Sway
+    const swayX = Math.sin(t * anim.bobSpeed * 0.7 + 0.5) * anim.swayAmp;
+    modelRoot.position.y = (modelRoot._baseY || 0) + bobY;
+    modelRoot.rotation.z = swayX;
+
+    // Y-rotation (look toward/away)
+    anim.rotNow = lerp(anim.rotNow, anim.rotTarget, 0.04);
+    modelRoot.rotation.y = anim.rotNow;
+
+    // Speaking head-shake micro (adds over the lean)
+    if (anim.isSpeaking) {
+      modelRoot.rotation.y += Math.sin(t * 6.5) * 0.018;
+      modelRoot.rotation.x  = Math.sin(t * 4.2) * 0.010 - 0.02;  // subtle nod
+    } else {
+      modelRoot.rotation.x = lerp(modelRoot.rotation.x || 0, 0, 0.05);
+    }
+
+    // Store base Y once model settled
+    if (!modelRoot._baseY) {
+      modelRoot._baseY = modelRoot.position.y;
+    }
+
+    // Angry: aggressive tremor
+    if (anim.emotion === 'angry' && anim.isSpeaking) {
+      modelRoot.position.x = Math.sin(t * 22) * 0.008;
+    } else {
+      modelRoot.position.x = lerp(modelRoot.position.x || 0, 0, 0.1);
+    }
+
+    // Happy: small jump on speaking
+    if (anim.emotion === 'happy' && anim.isSpeaking) {
+      const jumpBoost = Math.max(0, Math.sin(t * 9)) * 0.025;
+      modelRoot.position.y += jumpBoost;
+    }
+
+    // Confused: tilt head (roll)
+    if (anim.emotion === 'confused') {
+      modelRoot.rotation.z = lerp(modelRoot.rotation.z, 0.065 + swayX, 0.04);
+    }
+
+    // Sad: slight slump (forward lean)
+    if (anim.emotion === 'sad') {
+      modelRoot.rotation.x = lerp(modelRoot.rotation.x, 0.05, 0.03);
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Speaking timer: auto-stop after reply finishes "reading" ─────────
+function startSpeakingFor(replyText) {
+  const words    = replyText.split(/\s+/).length;
+  const duration = Math.max(1800, words * 210);   // ~210ms per word
+
+  setSpeaking(true);
+  clearTimeout(anim.speakTimer);
+  anim.speakTimer = setTimeout(() => setSpeaking(false), duration);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CHAT LOGIC
+// ═══════════════════════════════════════════════════════════════════════
+
+const API     = '';   // same origin (Flask)
+const msgList = document.getElementById('messages');
+const input   = document.getElementById('user-input');
+const typing  = document.getElementById('typing-indicator');
+
+// Emotion badge UI
+const EMOTION_META = {
+  neutral:  { emoji: '😐', label: 'neutral',  cls: 'emo-neutral'  },
+  happy:    { emoji: '😄', label: 'happy',    cls: 'emo-happy'    },
+  sad:      { emoji: '😢', label: 'sad',      cls: 'emo-sad'      },
+  angry:    { emoji: '😠', label: 'angry',    cls: 'emo-angry'    },
+  anxious:  { emoji: '😰', label: 'anxious',  cls: 'emo-anxious'  },
+  confused: { emoji: '🤔', label: 'confused', cls: 'emo-confused' },
+};
+
+function setEmotionUI(emotion) {
+  const badge = document.getElementById('emotion-badge');
+  const meta  = EMOTION_META[emotion] || EMOTION_META.neutral;
+  badge.className = 'glass ' + meta.cls;
+  badge.textContent = meta.emoji + ' ' + meta.label;
+  applyEmotion(emotion);
+}
+
+function appendMsg(text, role, meta = {}) {
+  typing.classList.remove('show');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+
+  if (role === 'bot') {
+    const m = document.createElement('div');
+    m.className = 'meta';
+    const emotion = meta.emotion || 'neutral';
+    const em = EMOTION_META[emotion] || EMOTION_META.neutral;
+    m.innerHTML = `<span>${em.emoji} ${emotion}</span>
+      ${meta.learned ? '<span class="learned-dot" title="Learned from this turn"></span>' : ''}
+      ${meta.score !== undefined && meta.score >= 0 ? `<span>score ${meta.score.toFixed(2)}</span>` : ''}`;
+    div.appendChild(m);
+  }
+  msgList.insertBefore(div, typing);
+  msgList.scrollTop = msgList.scrollHeight;
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  appendMsg(text, 'user');
+
+  // UI: thinking
+  setThinking(true);
+  typing.classList.add('show');
+  msgList.scrollTop = msgList.scrollHeight;
+
+  try {
+    const res  = await fetch(API + '/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+
+    setThinking(false);
+
+    if (data.error) {
+      appendMsg('⚠ ' + data.error, 'bot', { emotion: 'neutral' });
+      setSpeaking(false);
+      return;
+    }
+
+    setEmotionUI(data.emotion);
+    appendMsg(data.reply, 'bot', {
+      emotion: data.emotion,
+      learned: data.learned,
+      score:   data.score,
+    });
+
+    // Trigger 3-D speaking animation
+    startSpeakingFor(data.reply);
+
+    // Refresh sidebar
+    refreshSidebar();
+
+  } catch (err) {
+    setThinking(false);
+    appendMsg('Network error — is the Flask server running?', 'bot', { emotion: 'neutral' });
+    setSpeaking(false);
+  }
+}
+
+// ── Input auto-grow ───────────────────────────────────────────────────
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+// ── Sidebar refresh ───────────────────────────────────────────────────
+async function refreshSidebar() {
+  try {
+    const [factsRes, statsRes] = await Promise.all([
+      fetch(API + '/facts'),
+      fetch(API + '/stats'),
+    ]);
+    const { facts } = await factsRes.json();
+    const { stats } = await statsRes.json();
+
+    const fl = document.getElementById('facts-list');
+    fl.innerHTML = '';
+    const entries = Object.entries(facts || {});
+    if (!entries.length) {
+      fl.innerHTML = '<div style="font-size:11px;color:var(--sub)">Nothing yet — tell me about yourself!</div>';
+    } else {
+      entries.forEach(([k, v]) => {
+        fl.innerHTML += `<div class="fact-item"><span class="fact-key">${k}</span><span class="fact-val">${v}</span></div>`;
+      });
+    }
+
+    if (stats) {
+      document.getElementById('s-turns').textContent    = stats.total_turns    ?? 0;
+      document.getElementById('s-facts').textContent    = stats.total_facts    ?? 0;
+      document.getElementById('s-sessions').textContent = stats.sessions       ?? 0;
+    }
+  } catch (_) {}
+}
+
+// ── Reset session ─────────────────────────────────────────────────────
+document.getElementById('reset-btn').addEventListener('click', async () => {
+  if (!confirm('Clear this session\'s memory? Long-term facts are kept.')) return;
+  try {
+    await fetch(API + '/reset_session', { method: 'POST' });
+    msgList.innerHTML = '';
+    appendMsg("Session cleared. Fresh start! 🔄", 'bot', { emotion: 'neutral' });
+    setEmotionUI('neutral');
+    refreshSidebar();
+  } catch (_) {}
+});
+
+// ── Idle camera drift (gentle parallax look) ─────────────────────────
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// Apply subtle camera drift based on mouse (runs in parallel to the RAF above)
+(function cameraParallax() {
+  const BASE_X = 0, BASE_Y = 1.1;
+  function tick() {
+    // Only move camera if user isn't actively orbiting
+    if (!controls.enabled) { requestAnimationFrame(tick); return; }
+    camera.position.x += (BASE_X + mouseX * 0.18 - camera.position.x) * 0.018;
+    camera.position.y += (BASE_Y - mouseY * 0.08 - camera.position.y) * 0.018;
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+// ── Initial sidebar load ──────────────────────────────────────────────
+refreshSidebar();
+setInterval(refreshSidebar, 15000);
+
+})();
+</script>
+</body>
+</html>
