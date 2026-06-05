@@ -15,12 +15,12 @@ FALLBACKS = [
 # ── Tuneable thresholds ───────────────────────────────────────────────────────
 
 MIN_WORDS        = 2
-MAX_WORDS        = 20
-MAX_UNK_RATIO    = 0.25   # allow up to 25% UNK before rejecting
-MIN_UNIQUE_RATIO = 0.55   # unique words / total words
-MAX_REPEAT_NGRAM = 2      # reject if any bigram appears more than this many times
-MIN_COHERENCE    = 0.4    # ratio of "real" words (non-special)
-ECHO_THRESHOLD   = 0.75   # if reply shares >75% words with input → echo
+MAX_WORDS        = 80    # FIX: was 20 — Ollama replies are often 20-50 words
+MAX_UNK_RATIO    = 0.25
+MIN_UNIQUE_RATIO = 0.40  # FIX: was 0.55 — too strict for conversational replies
+MAX_REPEAT_NGRAM = 3     # FIX: was 2 — natural speech repeats bigrams occasionally
+MIN_COHERENCE    = 0.4
+ECHO_THRESHOLD   = 0.85  # FIX: was 0.75 — short greetings were being flagged
 
 
 # ── Individual checks ─────────────────────────────────────────────────────────
@@ -37,12 +37,10 @@ def check_repetition(words: list) -> tuple[bool, str]:
     if not words:
         return False, "empty"
 
-    # Word uniqueness ratio
     unique_ratio = len(set(words)) / len(words)
     if unique_ratio < MIN_UNIQUE_RATIO:
         return False, f"low uniqueness ({unique_ratio:.2f})"
 
-    # Bigram repetition
     bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words) - 1)]
     if bigrams:
         counts = Counter(bigrams)
@@ -71,7 +69,6 @@ def check_coherence(words: list) -> tuple[bool, str]:
     if ratio < MIN_COHERENCE:
         return False, f"low real-word ratio ({ratio:.2f})"
 
-    # All identical words
     if len(set(real_words)) == 1 and len(real_words) > 2:
         return False, f"all same word: '{real_words[0]}'"
 
@@ -79,7 +76,6 @@ def check_coherence(words: list) -> tuple[bool, str]:
 
 
 def check_echo(reply_words: list, input_words: list) -> tuple[bool, str]:
-
     if not input_words or not reply_words:
         return True, ""
 
@@ -94,17 +90,32 @@ def check_echo(reply_words: list, input_words: list) -> tuple[bool, str]:
 
 
 def check_is_fallback(reply: str) -> tuple[bool, str]:
-
-    if reply.strip() in FALLBACKS:
+    if reply.strip().lower() in FALLBACKS:
         return False, "identical to fallback"
+    return True, ""
+
+
+def check_broken_sentence(words: list) -> tuple[bool, str]:
+    # FIX: removed "i am a" pattern — it blocks legitimate Ollama replies
+    # Only keep patterns that are genuinely broken/nonsensical
+    bad_patterns = [
+        ["you", "you", "you"],   # only flag triple repetition
+        ["a", "lot", "you", "a", "lot"],
+    ]
+
+    joined = " ".join(words)
+    for pattern in bad_patterns:
+        if " ".join(pattern) in joined:
+            return False, "broken sentence pattern"
+
     return True, ""
 
 
 # ── Main filter ───────────────────────────────────────────────────────────────
 
 def filter_response(reply: str, user_input: str = "") -> tuple[bool, str]:
-    reply   = reply.strip()
-    words   = reply.split()
+    reply    = reply.strip()
+    words    = reply.split()
     in_words = user_input.lower().split() if user_input else []
 
     checks = [
@@ -134,53 +145,35 @@ def score_response(reply: str, user_input: str = "") -> float:
 
     score = 1.0
 
-    # Penalise too short / too long
-    ideal_len = 6
+    ideal_len   = 12   # FIX: was 6 — Ollama replies naturally run longer
     len_penalty = abs(len(words) - ideal_len) / ideal_len
     score -= min(0.3, len_penalty * 0.1)
 
-    # Penalise low uniqueness
     unique_ratio = len(set(words)) / len(words)
     score -= (1.0 - unique_ratio) * 0.3
 
-    # Penalise echo
     if in_words:
         overlap = len(set(words) & set(in_words)) / max(len(set(words)), 1)
         score -= overlap * 0.2
 
-    # Penalise UNK
     unk_ratio = words.count("<unk>") / len(words)
     score -= unk_ratio * 0.4
 
     return max(0.0, min(1.0, score))
 
 
-
-def check_broken_sentence(words: list) -> tuple[bool, str]:
-    bad_patterns = [
-        ["i", "am", "a"],
-        ["you", "you"],
-        ["a", "lot", "you"],
-    ]
-
-    joined = " ".join(words)
-
-    for pattern in bad_patterns:
-        if " ".join(pattern) in joined:
-            return False, "broken sentence pattern"
-
-    return True, ""
-
 # ── Quick test ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     test_cases = [
-        ("hi", "hello how are you doing today"),
-        ("i feel sad", "i am sorry to hear that what happened"),
-        ("what is your name", "my name is phoenix nice to meet you"),
+        ("hi", "Hey! Good to hear from you — what's on your mind?"),
+        ("i feel sad", "I hear you. That sounds really tough — you don't have to go through this alone."),
+        ("what is your name", "I'm Phoenix, your AI companion. Nice to meet you!"),
+        ("whats my name", "Your name is Vin. How's it going today?"),
         ("hello", "hello hello hello hello"),
-        ("how are you", "how are you"),                  # echo
-        ("test", "x"),                                   # too short
-        ("anything", "<unk> <unk> <unk> sure maybe"),   # high unk
+        ("how are you", "how are you"),
+        ("test", "x"),
+        ("anything", "<unk> <unk> <unk> sure maybe"),
+        ("hi", "I am a warm and caring companion who loves to chat with you."),  # was broken before
     ]
 
     print("Filter test results:\n")

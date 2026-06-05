@@ -12,6 +12,7 @@ Configurable via environment variables:
 """
 
 import os
+import re
 import random
 import requests
 
@@ -296,10 +297,21 @@ def chat_step(text: str, session_id: str = None) -> dict:
     new_facts = extract_and_save_facts(text)
 
     # Name query answered from memory
-    if "what is my name" in text.lower():
+    # Matches: "what is my name", "whats my name", "what's my name",
+    #          "do you know my name", "my name?", "tell me my name"
+    _name_q = re.sub(r"[^\w\s]", "", text.lower())  # strip punctuation
+    _is_name_query = (
+        "what is my name"  in _name_q or
+        "whats my name"    in _name_q or
+        "what my name"     in _name_q or
+        "do you know my name" in _name_q or
+        "tell me my name"  in _name_q or
+        (_name_q.strip() in ("my name", "my name?"))
+    )
+    if _is_name_query:
         facts = get_all_facts()
         if "name" in facts:
-            name_reply = apply_persona(f"your name is {facts['name']}", "neutral", text)
+            name_reply = apply_persona(f"Your name is {facts['name'].capitalize()}.", "neutral", text)
             return {
                 "reply": name_reply, "emotion": "neutral",
                 "temperature": 0.1,  "tone_hint": "",
