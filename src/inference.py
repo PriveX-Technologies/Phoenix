@@ -1,15 +1,10 @@
 """
 inference.py  –  Phoenix AI  (Ollama / Qwen backend)
 
-Replaces the original LSTM + fine-tuned-transformer pipeline with a call to
-a locally-running Ollama server.  All other Phoenix systems (persona, emotion
-detection, memory, filters, online dataset logging) are kept intact.
-
-Requirements
-------------
-  pip install requests
-  ollama pull qwen2.5          # or whichever Qwen tag you prefer
-  ollama serve                 # running on localhost:11434 (default)
+Changes vs previous version:
+  • chat_step() and _build_messages() accept an optional session_id so the
+    web UI can run multiple isolated user sessions simultaneously.
+  • CLI still uses a single module-level session as before.
 
 Configurable via environment variables:
   OLLAMA_HOST   – base URL for Ollama   (default: http://localhost:11434)
@@ -19,7 +14,6 @@ Configurable via environment variables:
 import os
 import random
 import requests
-import json
 
 from emotion import emotion_summary
 from memory  import (
@@ -35,10 +29,8 @@ from filters import filter_response, score_response
 
 OLLAMA_HOST  = os.environ.get("OLLAMA_HOST",  "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5")
-
 DATA_FILE    = "data/real_data.txt"
 
-# ── Phoenix system prompt ─────────────────────────────────────────────────────
 SYSTEM_PROMPT = """\
 You are Phoenix, a warm and emotionally intelligent AI companion.
 Your personality:
@@ -52,7 +44,7 @@ Your personality:
 """
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PHOENIX VOICE PERSONALITY  (unchanged from original)
+# PHOENIX VOICE PERSONALITY
 # ══════════════════════════════════════════════════════════════════════════════
 
 _FILLERS = {
@@ -89,7 +81,6 @@ _GENERIC_FALLBACKS = [
 
 
 def apply_persona(reply: str, emotion: str, user_text: str) -> str:
-    """Post-process any reply to match the Phoenix voice personality."""
     reply = reply.strip()
     if not reply:
         return reply
@@ -101,9 +92,7 @@ def apply_persona(reply: str, emotion: str, user_text: str) -> str:
                       "let me", "wait", "that", "i hear", "one step")
     already_natural = reply.lower().startswith(natural_starts)
 
-    opener = ""
-    if not already_natural:
-        opener = random.choice(_FILLERS[em])
+    opener = "" if already_natural else random.choice(_FILLERS[em])
 
     if 6 <= len(words) <= 15 and not already_natural and random.random() < 0.25:
         opener = random.choice(_THINKING) + opener.lstrip()
@@ -113,13 +102,11 @@ def apply_persona(reply: str, emotion: str, user_text: str) -> str:
         continuation = random.choice(_CONTINUATIONS[em])
 
     result = (opener + reply + continuation).strip()
-    if result:
-        result = result[0].upper() + result[1:]
-    return result
+    return (result[0].upper() + result[1:]) if result else result
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# RULE-BASED FALLBACK  (kept as safety net, unchanged)
+# RULE-BASED FALLBACK
 # ══════════════════════════════════════════════════════════════════════════════
 
 RULE_RESPONSES = [
@@ -143,6 +130,13 @@ RULE_RESPONSES = [
      ["No worries at all.", "Hey, don't worry about it."]),
 ]
 
+FALLBACKS = [
+    "i dont understand that fully",
+    "can you say that differently",
+    "hmm i am still learning",
+    "tell me more",
+]
+
 
 def rule_based_reply(text: str) -> str:
     t = text.lower()
@@ -153,15 +147,13 @@ def rule_based_reply(text: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# OLLAMA / QWEN BACKEND
+# OLLAMA BACKEND
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Cached availability flag so we only probe once per process startup
 _ollama_available: bool | None = None
 
 
 def _check_ollama() -> bool:
-    """Return True if Ollama is reachable and the configured model is present."""
     global _ollama_available
     if _ollama_available is not None:
         return _ollama_available
@@ -169,10 +161,9 @@ def _check_ollama() -> bool:
         r = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=3)
         if r.status_code == 200:
             tags = [m.get("name", "") for m in r.json().get("models", [])]
-            # Match on model name prefix (e.g. "qwen2.5" matches "qwen2.5:latest")
             _ollama_available = any(OLLAMA_MODEL in t for t in tags)
             if not _ollama_available:
-                print(f"⚠️  Ollama is running but model '{OLLAMA_MODEL}' not found.")
+                print(f"⚠️  Model '{OLLAMA_MODEL}' not found in Ollama.")
                 print(f"   Available: {tags}")
                 print(f"   Run:  ollama pull {OLLAMA_MODEL}")
             else:
@@ -184,13 +175,10 @@ def _check_ollama() -> bool:
     return False
 
 
-def _build_messages(user_text: str, tone_hint: str) -> list[dict]:
-    """
-    Construct the messages list for the Ollama /api/chat endpoint.
-    Injects memory context and tone hint into the system turn.
-    """
+def _build_messages(user_text: str, tone_hint: str, session_id: str) -> list[dict]:
+    """Build messages list with memory context for the given session."""
     profile_ctx = build_profile_string()
-    memory_ctx  = build_context_string(n=5, session_id=current_session)
+    memory_ctx  = build_context_string(n=5, session_id=session_id)
 
     system_parts = [SYSTEM_PROMPT]
     if profile_ctx:
@@ -200,52 +188,36 @@ def _build_messages(user_text: str, tone_hint: str) -> list[dict]:
     if memory_ctx:
         system_parts.append(f"Recent conversation context:\n{memory_ctx}")
 
-    messages = [
-        {"role": "system",    "content": "\n\n".join(system_parts)},
-        {"role": "user",      "content": user_text},
+    return [
+        {"role": "system", "content": "\n\n".join(system_parts)},
+        {"role": "user",   "content": user_text},
     ]
-    return messages
 
 
-def ollama_reply(user_text: str, tone_hint: str, temperature: float) -> str:
-    """
-    Call Ollama's chat API and return the assistant's reply text.
-    Falls back to rule_based_reply on any error.
-    """
+def ollama_reply(user_text: str, tone_hint: str, temperature: float,
+                 session_id: str) -> str:
     if not _check_ollama():
         return rule_based_reply(user_text)
 
     payload = {
         "model":    OLLAMA_MODEL,
-        "messages": _build_messages(user_text, tone_hint),
+        "messages": _build_messages(user_text, tone_hint, session_id),
         "stream":   False,
         "options": {
-            "temperature":      max(0.1, min(1.0, temperature)),
-            "top_p":            0.85,
-            "repeat_penalty":   1.4,
-            "num_predict":      80,   # max tokens in reply
+            "temperature":    max(0.1, min(1.0, temperature)),
+            "top_p":          0.85,
+            "repeat_penalty": 1.4,
+            "num_predict":    80,
         },
     }
 
     try:
-        r = requests.post(
-            f"{OLLAMA_HOST}/api/chat",
-            json=payload,
-            timeout=30,
-        )
+        r = requests.post(f"{OLLAMA_HOST}/api/chat", json=payload, timeout=30)
         r.raise_for_status()
-        data  = r.json()
-        reply = data.get("message", {}).get("content", "").strip()
-
-        if not reply:
+        reply = r.json().get("message", {}).get("content", "").strip()
+        if not reply or len(reply.split()) < 3:
             return rule_based_reply(user_text)
-
-        # Basic quality gate: reject if reply is suspiciously short
-        if len(reply.split()) < 3:
-            return rule_based_reply(user_text)
-
         return reply
-
     except requests.exceptions.Timeout:
         print("⚠️  Ollama request timed out.")
         return rule_based_reply(user_text)
@@ -255,18 +227,17 @@ def ollama_reply(user_text: str, tone_hint: str, temperature: float) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# RESPOND  (main generation entry-point)
+# RESPOND
 # ══════════════════════════════════════════════════════════════════════════════
 
-def respond(text: str) -> dict:
+def respond(text: str, session_id: str) -> dict:
     emo         = emotion_summary(text)
     emotion     = emo["emotion"]
     temperature = emo["temperature"]
     tone_hint   = emo["tone_hint"]
 
-    reply = ollama_reply(text, tone_hint, temperature)
+    reply = ollama_reply(text, tone_hint, temperature, session_id)
 
-    # Validate; if garbage, fall back to rule-based
     passed, _ = filter_response(reply, text)
     if not passed or len(reply.split()) < 3:
         reply = rule_based_reply(text)
@@ -284,16 +255,8 @@ def respond(text: str) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DATASET LOGGING  (unchanged – keeps training data growing)
+# DATASET LOGGING
 # ══════════════════════════════════════════════════════════════════════════════
-
-FALLBACKS = [
-    "i dont understand that fully",
-    "can you say that differently",
-    "hmm i am still learning",
-    "tell me more",
-]
-
 
 def save_to_dataset(user: str, bot: str):
     if len(user.split()) < 2 or len(bot.split()) < 2:
@@ -306,43 +269,44 @@ def save_to_dataset(user: str, bot: str):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SESSION STATE
+# SESSION STATE  (CLI default session)
 # ══════════════════════════════════════════════════════════════════════════════
 
 current_session = new_session()
 turn_number     = 0
-
-# These are kept for API compatibility with web_ui.py
-model           = None   # no LSTM
-ft_model        = None   # no transformer
+model           = None   # legacy compat
+ft_model        = None   # legacy compat
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CHAT STEP  (used by both CLI and web_ui.py)
+# CHAT STEP
 # ══════════════════════════════════════════════════════════════════════════════
 
-def chat_step(text: str) -> dict:
+def chat_step(text: str, session_id: str = None) -> dict:
+    """
+    Main entry-point for both CLI and web UI.
+    Pass session_id from the web UI to isolate per-user memory.
+    Omit (or pass None) from CLI to use the module-level session.
+    """
     global turn_number
 
-    text      = text.strip()
+    sid  = session_id or current_session
+    text = text.strip()
+
     new_facts = extract_and_save_facts(text)
 
-    # Special: name query answered from memory
+    # Name query answered from memory
     if "what is my name" in text.lower():
         facts = get_all_facts()
         if "name" in facts:
             name_reply = apply_persona(f"your name is {facts['name']}", "neutral", text)
             return {
-                "reply":       name_reply,
-                "emotion":     "neutral",
-                "temperature": 0.1,
-                "tone_hint":   "",
-                "learned":     False,
-                "new_facts":   new_facts,
-                "score":       1.0,
+                "reply": name_reply, "emotion": "neutral",
+                "temperature": 0.1,  "tone_hint": "",
+                "learned": False,    "new_facts": new_facts, "score": 1.0,
             }
 
-    result  = respond(text)
+    result  = respond(text, session_id=sid)
     reply   = result["reply"]
     emotion = result["emotion"]
 
@@ -353,10 +317,16 @@ def chat_step(text: str) -> dict:
         save_to_dataset(text.lower(), reply)
         learned = True
 
-    turn_number += 1
+    # Increment module-level counter only for CLI session
+    if session_id is None:
+        turn_number += 1
+        turn = turn_number
+    else:
+        turn = 0   # web UI tracks its own turn count in Flask session
+
     save_turn(
-        session_id = current_session,
-        turn       = turn_number,
+        session_id = sid,
+        turn       = turn,
         user_text  = text.lower(),
         bot_text   = reply,
         emotion    = emotion,
@@ -375,16 +345,13 @@ def chat_step(text: str) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STUBS  (keep web_ui.py happy – no-ops since Ollama handles generation)
+# STUBS
 # ══════════════════════════════════════════════════════════════════════════════
 
 def save_checkpoint():
-    """No-op: Qwen weights are managed by Ollama, not saved here."""
     pass
 
-
 def online_update(user_text: str, reply_text: str, approved: bool):
-    """No-op: fine-tuning is handled offline via Ollama model management."""
     return 0.0
 
 
@@ -407,16 +374,13 @@ if __name__ == "__main__":
 
         if not text:
             continue
-
         if text.lower() == "exit":
             print("Phoenix: Goodbye!")
             break
-
         if text.lower() == "/reset":
             clear_session_memory(current_session)
             print("Phoenix: Session memory cleared.")
             continue
-
         if text.lower() == "/memory":
             from memory import get_recent_turns
             turns = get_recent_turns(10, current_session)
@@ -426,17 +390,11 @@ if __name__ == "__main__":
                 for i, t in enumerate(turns, 1):
                     print(f"  [{i}] [{t['emotion']}] You: {t['user_text']} | Phoenix: {t['bot_text']}")
             continue
-
         if text.lower() == "/facts":
-            facts = get_all_facts()
-            print(f"Phoenix: Known facts: {facts}")
+            print(f"Phoenix: Known facts: {get_all_facts()}")
             continue
-
         if text.lower() == "/stats":
-            stats = memory_stats()
-            facts = get_all_facts()
-            print(f"Phoenix: {stats}")
-            print(f"  Known facts: {facts}")
+            print(f"Phoenix: {memory_stats()}")
             continue
 
         result = chat_step(text)

@@ -1,13 +1,15 @@
 """
 main.py  –  Phoenix launcher (Ollama / Qwen backend)
 
-Starts the web UI directly – no training or dataset generation needed.
-Ollama must be running with the Qwen model pulled before launching.
-
 Quick-start:
     ollama pull qwen2.5
-    ollama serve          # in a separate terminal (or it may already be running)
+    ollama serve
+    pip install -r requirements.txt
     python main.py
+
+Optional features:
+    Voice input:   pip install faster-whisper
+    Fine-tune:     python fine_tune_ollama.py --status
 """
 
 import os
@@ -17,8 +19,6 @@ import threading
 import webbrowser
 import subprocess
 
-# ── Optional: override model via env ─────────────────────────────────────────
-# OLLAMA_MODEL=qwen2.5:72b python main.py
 model_name = os.environ.get("OLLAMA_MODEL", "qwen2.5")
 host       = os.environ.get("OLLAMA_HOST",  "http://localhost:11434")
 
@@ -29,25 +29,43 @@ print(f"  Backend : {host}")
 print(f"  Model   : {model_name}")
 print()
 
-# ── Quick pre-flight: is Ollama reachable? ────────────────────────────────────
+# ── Pre-flight checks ─────────────────────────────────────────────────────────
 try:
     import requests
-    r = requests.get(f"{host}/api/tags", timeout=3)
+
+    # Ollama check
+    r    = requests.get(f"{host}/api/tags", timeout=3)
     tags = [m.get("name", "") for m in r.json().get("models", [])]
     if not any(model_name in t for t in tags):
-        print(f"⚠️  Model '{model_name}' not found in Ollama.")
+        print(f"⚠️  Model '{model_name}' not found.")
         print(f"   Run:  ollama pull {model_name}")
-        print(f"   Available models: {tags or '(none)'}\n")
-        # Continue anyway – inference.py will use rule-based fallback
+        print(f"   Available: {tags or '(none)'}\n")
     else:
-        print(f"✅ Model '{model_name}' ready.\n")
+        print(f"✅ Model '{model_name}' ready.")
+
+    # Voice (optional)
+    try:
+        import faster_whisper  # noqa
+        print("🎙️  Voice input ready  (faster-whisper)")
+    except ImportError:
+        print("ℹ️  Voice input disabled  (pip install faster-whisper to enable)")
+
+    # Show loaded plugins
+    import pathlib, importlib.util
+    plugin_dir = pathlib.Path("plugins")
+    plugins    = [p.stem for p in plugin_dir.glob("*.py") if p.stem != "__init__"]
+    if plugins:
+        print(f"🔌 Plugins: {', '.join('/' + p for p in plugins)}")
+
+    print()
+
 except Exception as e:
     print(f"⚠️  Cannot reach Ollama at {host}: {e}")
     print("   Make sure Ollama is running:  ollama serve\n")
-    # Continue – web UI will still start; error shown on /status
 
 # ── Launch UI ─────────────────────────────────────────────────────────────────
 print("🚀 Starting Phoenix Web UI...")
+print("   Visit: http://localhost:5000\n")
 
 def open_browser():
     time.sleep(2)
