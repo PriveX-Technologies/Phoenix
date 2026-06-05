@@ -135,15 +135,8 @@ def reset_session():
 
 @app.route("/save", methods=["POST"])
 def save_model():
-    inf, err = get_phoenix()
-    if err or inf is None:
-        return jsonify({"ok": False, "error": "Model not loaded"})
-    try:
-        inf.save_checkpoint()
-        return jsonify({"ok": True, "message": "Checkpoint saved."})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"ok": False, "error": str(e)})
+    """No-op for Ollama backend – weights are managed by Ollama."""
+    return jsonify({"ok": True, "message": "Ollama backend – no checkpoint to save."})
 
 
 @app.route("/history")
@@ -165,22 +158,34 @@ def history():
 
 @app.route("/status")
 def status():
-    inf, err  = get_phoenix()
-    lstm_ok   = inf is not None and inf.model   is not None
-    transf_ok = inf is not None and getattr(inf, "ft_model", None) is not None
+    inf, err = get_phoenix()
+
+    # Check Ollama availability
+    ollama_ok    = False
+    ollama_model = "unknown"
+    if inf is not None:
+        try:
+            ollama_ok    = inf._check_ollama()
+            ollama_model = inf.OLLAMA_MODEL
+        except Exception:
+            pass
+
     return jsonify({
-        "ok":                  err is None,
-        "error":               err,
-        "lstm_loaded":         lstm_ok,
-        "transformer_loaded":  transf_ok,
-        "session_id":          getattr(inf, "current_session", None) if inf else None,
-        "approved_count":      getattr(inf, "approved_count",  0)    if inf else 0,
+        "ok":              err is None,
+        "error":           err,
+        "backend":         "ollama",
+        "ollama_ready":    ollama_ok,
+        "model":           ollama_model,
+        # Legacy keys kept so existing frontend code doesn't break
+        "lstm_loaded":     False,
+        "transformer_loaded": False,
+        "session_id":      getattr(inf, "current_session", None) if inf else None,
+        "approved_count":  getattr(inf, "turn_number",     0)    if inf else 0,
     })
 
 
 if __name__ == "__main__":
-    print("\n🔥 Phoenix Web UI starting...")
+    print("\n🔥 Phoenix Web UI starting (Ollama / Qwen backend)...")
     print(f"   Serving frontend from: {FRONTEND_DIR}")
-    print("   Visit: http://localhost:5000")
-    print("   GLB:   http://localhost:5000/cyber_samurai.glb\n")
+    print("   Visit: http://localhost:5000\n")
     app.run(debug=False, host="0.0.0.0", port=5000)

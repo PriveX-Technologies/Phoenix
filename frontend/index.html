@@ -813,7 +813,7 @@ const EMOTION_CONFIG = {
 let currentEmotion = 'neutral';
 let isTalking = false;
 let talkTimer = null;
-const TALK_DURATION = 3500; // ms to show "talking" animation after reply
+const TALK_DURATION = 3500; // default fallback — overridden dynamically per reply
 
 function playClip(name, crossFadeDuration = 0.5) {
   const next = clips[name];
@@ -856,9 +856,15 @@ function setEmotion(emotion) {
   document.getElementById('s-emotion').textContent     = emotion;
 }
 
-/** Called when Phoenix starts replying */
-function startTalking(emotion) {
+/** Called when Phoenix starts replying.
+ *  @param {string} emotion
+ *  @param {number} [durationMs] — if provided, avatar stays in talk mode
+ *    for this long (synced to TTS speech length). Falls back to TALK_DURATION.
+ */
+function startTalking(emotion, durationMs) {
   setEmotion(emotion);
+
+  const talkDuration = (durationMs && durationMs > 500) ? durationMs + 600 : TALK_DURATION;
 
   // Play emotion clip first, then switch to talking
   const emotionClip = emotion !== 'neutral' ? emotion : 'talking';
@@ -874,7 +880,7 @@ function startTalking(emotion) {
   talkTimer = setTimeout(() => {
     isTalking = false;
     playClip('idle', 0.6);
-  }, TALK_DURATION);
+  }, talkDuration);
 }
 
 /** Called when the user is typing */
@@ -1087,6 +1093,136 @@ inputEl.addEventListener('input', () => {
 })();
 
 
+
+// ══════════════════════════════════════════════════════════════════
+//  PHOENIX VOICE PRE-PROCESSOR
+//  Transforms raw text replies into natural spoken speech:
+//    - Injects breathing pauses via SSML-like comma spacing
+//    - Strips markdown symbols and emojis that TTS reads aloud
+//    - Estimates speech duration to sync avatar animation
+// ══════════════════════════════════════════════════════════════════
+
+/**
+ * Estimate how long the browser TTS will take to speak `text` in ms.
+ * Uses words-per-minute based on the current rate slider.
+ */
+function estimateSpeechDurationMs(text, rate) {
+  const words = text.trim().split(/\s+/).length;
+  const wpm   = 150 * (rate || 1.0);   // average speaking rate * TTS rate
+  return Math.round((words / wpm) * 60 * 1000);
+}
+
+/**
+ * Pre-process a raw bot reply into natural spoken text:
+ *   1. Strip emojis and markdown
+ *   2. Add natural pauses after sentence-ending punctuation
+ *   3. Expand common abbreviations for correct TTS pronunciation
+ *   4. Ensure contractions sound natural (don't → "don't", etc.)
+ */
+function prepareForSpeech(raw) {
+  let t = raw;
+
+  // Strip emojis (Unicode ranges)
+  t = t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '');
+
+  // Strip markdown bold/italic (* ** _)
+  t = t.replace(/[*_~`#]/g, '');
+
+  // Strip URLs
+  t = t.replace(/https?:\/\/\S+/g, '');
+
+  // Trim "📎 Remembered —" prefix if somehow included
+  t = t.replace(/^📎.*?—\s*/u, '');
+
+  // Strip leftover special punctuation
+  t = t.replace(/[→←↑↓►▶◀◄]/g, '');
+
+  // Expand common abbreviations
+  const abbr = {
+    "AI": "A I",
+    "LSTM": "L S T M",
+    "GPT": "G P T",
+    "btw": "by the way",
+    "tbh": "to be honest",
+    "idk": "I don't know",
+    "imo": "in my opinion",
+    "lol": "ha",
+    "omg": "oh my",
+    "ngl": "not gonna lie",
+    "irl": "in real life",
+    "rn": "right now",
+    "smh": "shaking my head",
+  };
+  for (const [from, to] of Object.entries(abbr)) {
+    t = t.replace(new RegExp(`\\b${from}\\b`, 'gi'), to);
+  }
+
+  // Add slight breathing pause (comma) after sentence breaks if missing
+  // e.g. "Hello. How are you?" → "Hello,  How are you?"
+  t = t.replace(/([.!?])\s+([A-Z])/g, '$1, $2');
+
+  // Remove double spaces
+  t = t.replace(/\s{2,}/g, ' ').trim();
+
+  return t;
+}
+
+/**
+ * Speak a bot reply with the full Phoenix personality:
+ *   - Pre-processes text for natural speech
+ *   - Estimates duration to sync avatar talk animation
+ *   - Applies emotion-based rate/pitch modulation
+ * Returns the estimated duration in ms (or 0 if TTS disabled).
+ */
+function speakReply(rawText, emotion) {
+  if (!synth) return 0;
+  if (!document.getElementById('auto-speak-toggle').checked) return 0;
+
+  synth.cancel();
+
+  const clean = prepareForSpeech(rawText);
+  if (!clean) return 0;
+
+  const rate  = parseFloat(document.getElementById('rate-slider').value);
+  const estMs = estimateSpeechDurationMs(clean, rate);
+
+  const utt   = new SpeechSynthesisUtterance(clean);
+  utt.voice   = selectedVoice || null;
+  utt.volume  = parseFloat(document.getElementById('vol-slider').value);
+  utt.rate    = rate;
+  utt.pitch   = parseFloat(document.getElementById('pitch-slider').value);
+
+  // Emotion modulation
+  const emotionMod = {
+    happy:   { rateDelta: +0.12, pitchDelta: +0.08 },
+    sad:     { rateDelta: -0.12, pitchDelta: -0.10 },
+    angry:   { rateDelta: +0.08, pitchDelta: +0.04 },
+    anxious: { rateDelta: +0.06, pitchDelta: +0.04 },
+    confused:{ rateDelta: -0.04, pitchDelta:  0    },
+    neutral: { rateDelta:  0,    pitchDelta:  0    },
+  };
+  const mod = emotionMod[emotion] || emotionMod.neutral;
+  utt.rate  = Math.max(0.5, Math.min(2.0, utt.rate  + mod.rateDelta));
+  utt.pitch = Math.max(0.5, Math.min(2.0, utt.pitch + mod.pitchDelta));
+
+  utt.onstart = () => {
+    isSpeaking = true;
+    document.getElementById('speaking-badge').classList.add('show');
+    startMouthRhythm();
+  };
+
+  utt.onend = utt.onerror = () => {
+    isSpeaking = false;
+    document.getElementById('speaking-badge').classList.remove('show');
+    stopMouthRhythm();
+    // Return avatar to idle once speech ends
+    if (!isTalking) playClip('idle', 0.8);
+  };
+
+  setTimeout(() => synth.speak(utt), 80);
+  return estMs;
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  VOICE ENGINE  (Web Speech API — SpeechSynthesis)
 // ══════════════════════════════════════════════════════════════════
@@ -1268,7 +1404,7 @@ function speakText(text, emotion) {
 }
 
 function speakTest() {
-  speakText("Hello! I am Phoenix, your AI companion. How can I help you today?", 'neutral');
+  speakReply("Hello! I am Phoenix, your AI companion. How can I help you today?", 'neutral');
 }
 
 // ── Voice panel collapse toggle ────────────────────────────────────
@@ -1438,8 +1574,12 @@ window._lastBotEmotion = 'neutral';
         // Trigger avatar behaviour
         startTalking(emotion);
 
-        // ✅ SPEAK the reply
-        speakText(data.reply, emotion);
+        // ✅ SPEAK with full personality pre-processor + duration-synced animation
+        const estDurationMs = speakReply(data.reply, emotion);
+
+        // Re-trigger startTalking with the speech duration so avatar
+        // keeps talking for exactly as long as Phoenix is speaking
+        startTalking(emotion, estDurationMs);
 
         appendMessage('bot', data.reply);
         updateStats(data);

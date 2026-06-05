@@ -1,11 +1,26 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import random
-import os
+"""
+inference.py  –  Phoenix AI  (Ollama / Qwen backend)
 
-from model   import PhoenixModel
-from dataset import PhoenixDataset
+Replaces the original LSTM + fine-tuned-transformer pipeline with a call to
+a locally-running Ollama server.  All other Phoenix systems (persona, emotion
+detection, memory, filters, online dataset logging) are kept intact.
+
+Requirements
+------------
+  pip install requests
+  ollama pull qwen2.5          # or whichever Qwen tag you prefer
+  ollama serve                 # running on localhost:11434 (default)
+
+Configurable via environment variables:
+  OLLAMA_HOST   – base URL for Ollama   (default: http://localhost:11434)
+  OLLAMA_MODEL  – model tag             (default: qwen2.5)
+"""
+
+import os
+import random
+import requests
+import json
+
 from emotion import emotion_summary
 from memory  import (
     new_session, save_turn, build_context_string,
@@ -14,343 +29,270 @@ from memory  import (
 )
 from filters import filter_response, score_response
 
-# ── Config ────────────────────────────────────────────────────────────────────
-LR_ONLINE        = 5e-5
-CLIP             = 0.5
-SAVE_EVERY       = 10
-DATA_FILE        = "data/real_data.txt"
-PHOENIX_PT       = "models/phoenix.pt"
-TRANSFORMER_PATH = "models/phoenix_transformer"
+# ══════════════════════════════════════════════════════════════════════════════
+# CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
 
-# ── Transformer DISABLED — base DialoGPT generates garbage without fine-tuning.
-# To re-enable: run fine_tune.py, then uncomment the block below.
+OLLAMA_HOST  = os.environ.get("OLLAMA_HOST",  "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5")
 
-try:
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        if os.path.isdir(TRANSFORMER_PATH):
-            ft_tokenizer = AutoTokenizer.from_pretrained(TRANSFORMER_PATH)
-            ft_model     = AutoModelForCausalLM.from_pretrained(TRANSFORMER_PATH)
-            print("✅ Transformer model loaded.")
-except Exception as e:
-        print(f"⚠️  Transformer load failed: {e}")
+DATA_FILE    = "data/real_data.txt"
 
-# ── Phoenix LSTM checkpoint ───────────────────────────────────────────────────
-model            = None
-dataset          = None
-online_optimizer = None
-criterion        = None
-vocab_size       = 0
-cfg              = {}
+# ── Phoenix system prompt ─────────────────────────────────────────────────────
+SYSTEM_PROMPT = """\
+You are Phoenix, a warm and emotionally intelligent AI companion.
+Your personality:
+- Speak in short, natural, human-paced sentences (aim for 1-3 sentences).
+- Match the user's emotional tone: be gentle when they're sad, calm when they're angry,
+  reassuring when they're anxious, enthusiastic when they're happy.
+- Occasionally ask a light follow-up question to keep the conversation going.
+- Never lecture, never list bullet points in casual chat.
+- You are NOT a generic assistant. You care about the person you're talking to.
+- Keep replies concise – rarely exceed 40 words unless the user explicitly asks for detail.
+"""
 
-if os.path.isfile(PHOENIX_PT):
+# ══════════════════════════════════════════════════════════════════════════════
+# PHOENIX VOICE PERSONALITY  (unchanged from original)
+# ══════════════════════════════════════════════════════════════════════════════
+
+_FILLERS = {
+    "neutral":  ["", "", "Alright, ", "I see — ", "Got it. ", ""],
+    "happy":    ["Oh wow, ", "That's great! ", "Love it! ", "", "Awesome — "],
+    "sad":      ["Hmm… ", "I hear you. ", "I'm sorry — ", "That sounds really tough. "],
+    "angry":    ["Alright, let's sort this out. ", "I get it — ", "Let's take a breath. "],
+    "anxious":  ["Hey, it's okay. ", "Take it easy — ", "One step at a time. "],
+    "confused": ["Let me think… ", "Hmm, ", "Interesting — ", "Let me clarify. "],
+}
+
+_CONTINUATIONS = {
+    "neutral":  [" What do you think?", " Want me to explain more?",
+                 " Let me know if you have questions.", ""],
+    "happy":    [" Tell me more!", " What's got you excited?", " I'd love to hear more.", ""],
+    "sad":      [" I'm here if you want to talk.",
+                 " You don't have to go through this alone.", "", ""],
+    "angry":    [" What happened exactly?", " Let's figure this out together.", ""],
+    "anxious":  [" You've got this.", " Want to talk it through?", " I'm right here.", ""],
+    "confused": [" Does that make sense?", " Want me to break it down simpler?",
+                 " Ask me anything.", ""],
+}
+
+_THINKING = ["Let me think… ", "Hmm… ", "", "", ""]
+_GENERIC_FALLBACKS = [
+    "Hmm, that's interesting — tell me more.",
+    "I'm listening. Go on.",
+    "Could you say a bit more about that?",
+    "What's on your mind?",
+    "Gotcha — go ahead.",
+    "Interesting… what else?",
+    "Tell me more — I'm genuinely curious.",
+]
+
+
+def apply_persona(reply: str, emotion: str, user_text: str) -> str:
+    """Post-process any reply to match the Phoenix voice personality."""
+    reply = reply.strip()
+    if not reply:
+        return reply
+
+    words = reply.split()
+    em    = emotion if emotion in _FILLERS else "neutral"
+
+    natural_starts = ("hmm", "alright", "gotcha", "i see", "oh", "hey",
+                      "let me", "wait", "that", "i hear", "one step")
+    already_natural = reply.lower().startswith(natural_starts)
+
+    opener = ""
+    if not already_natural:
+        opener = random.choice(_FILLERS[em])
+
+    if 6 <= len(words) <= 15 and not already_natural and random.random() < 0.25:
+        opener = random.choice(_THINKING) + opener.lstrip()
+
+    continuation = ""
+    if not reply.endswith("?") and random.random() < 0.28:
+        continuation = random.choice(_CONTINUATIONS[em])
+
+    result = (opener + reply + continuation).strip()
+    if result:
+        result = result[0].upper() + result[1:]
+    return result
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RULE-BASED FALLBACK  (kept as safety net, unchanged)
+# ══════════════════════════════════════════════════════════════════════════════
+
+RULE_RESPONSES = [
+    (["hi", "hello", "hey", "sup", "yo"],
+     ["Hey! Good to hear from you — what's on your mind?",
+      "Hello there! How are you doing today?",
+      "Hey, nice of you to drop by. What's up?"]),
+    (["bye", "goodbye", "see you", "later", "cya"],
+     ["Take care! Come back whenever you need me.",
+      "Goodbye! I'll be right here when you're back.",
+      "See you later — hope your day goes well!"]),
+    (["how are you", "how r u", "how do you feel", "you ok", "you good"],
+     ["I'm doing well, thanks for asking! How about you?",
+      "All good on my end. What's going on with you?"]),
+    (["your name", "who are you", "what are you", "what's your name"],
+     ["I'm Phoenix — your AI companion. Nice to meet you!",
+      "The name's Phoenix. Here to chat, help, and learn."]),
+    (["thank", "thanks", "thx", "ty", "appreciate"],
+     ["You're very welcome!", "Anytime — that's what I'm here for."]),
+    (["sorry", "my bad", "apolog"],
+     ["No worries at all.", "Hey, don't worry about it."]),
+]
+
+
+def rule_based_reply(text: str) -> str:
+    t = text.lower()
+    for keywords, replies in RULE_RESPONSES:
+        if any(kw in t for kw in keywords):
+            return random.choice(replies)
+    return random.choice(_GENERIC_FALLBACKS)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# OLLAMA / QWEN BACKEND
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Cached availability flag so we only probe once per process startup
+_ollama_available: bool | None = None
+
+
+def _check_ollama() -> bool:
+    """Return True if Ollama is reachable and the configured model is present."""
+    global _ollama_available
+    if _ollama_available is not None:
+        return _ollama_available
     try:
-        print(f"Loading Phoenix checkpoint from {PHOENIX_PT}...")
-        checkpoint = torch.load(PHOENIX_PT, map_location="cpu")
-        cfg        = checkpoint.get("config", {})
-        vocab_size = cfg.get("vocab_size", len(checkpoint["vocab"]))
-
-        model = PhoenixModel(
-            vocab_size  = vocab_size,
-            embed_size  = cfg.get("embed_size", 64),
-            hidden_size = cfg.get("hidden_size", 128),
-        )
-        model.load_state_dict(checkpoint["model"])
-
-        online_optimizer = optim.Adam(model.parameters(), lr=LR_ONLINE)
-        criterion        = nn.CrossEntropyLoss(ignore_index=0)
-
-        dataset          = PhoenixDataset()
-        dataset.word2idx = checkpoint["vocab"]
-        dataset.idx2word = {i: w for w, i in dataset.word2idx.items()}
-        dataset.vocab    = list(dataset.word2idx.keys())
-
-        print("✅ Phoenix LSTM loaded.")
+        r = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=3)
+        if r.status_code == 200:
+            tags = [m.get("name", "") for m in r.json().get("models", [])]
+            # Match on model name prefix (e.g. "qwen2.5" matches "qwen2.5:latest")
+            _ollama_available = any(OLLAMA_MODEL in t for t in tags)
+            if not _ollama_available:
+                print(f"⚠️  Ollama is running but model '{OLLAMA_MODEL}' not found.")
+                print(f"   Available: {tags}")
+                print(f"   Run:  ollama pull {OLLAMA_MODEL}")
+            else:
+                print(f"✅ Ollama ready  [{OLLAMA_MODEL}]")
+            return _ollama_available
     except Exception as e:
-        print(f"❌ Phoenix checkpoint load failed: {e}")
-        model = None
-else:
-    print(f"⚠️  Phoenix checkpoint not found at '{PHOENIX_PT}'.")
-    print("   Run train.py to create it.")
+        print(f"⚠️  Ollama not reachable at {OLLAMA_HOST}: {e}")
+    _ollama_available = False
+    return False
 
-# ── Sanity check ──────────────────────────────────────────────────────────────
-if model is None and ft_model is None:
-    print("\n❌ ERROR: No models available. Phoenix cannot respond.")
-    print("   Fix: run train.py (LSTM) and/or fine_tune.py (transformer).\n")
 
-# ── Session ───────────────────────────────────────────────────────────────────
-current_session = new_session()
-turn_number     = 0
-approved_count  = 0
+def _build_messages(user_text: str, tone_hint: str) -> list[dict]:
+    """
+    Construct the messages list for the Ollama /api/chat endpoint.
+    Injects memory context and tone hint into the system turn.
+    """
+    profile_ctx = build_profile_string()
+    memory_ctx  = build_context_string(n=5, session_id=current_session)
 
-# ── Fallbacks ─────────────────────────────────────────────────────────────────
+    system_parts = [SYSTEM_PROMPT]
+    if profile_ctx:
+        system_parts.append(f"User profile: {profile_ctx}")
+    if tone_hint:
+        system_parts.append(f"Tone guidance: {tone_hint}")
+    if memory_ctx:
+        system_parts.append(f"Recent conversation context:\n{memory_ctx}")
+
+    messages = [
+        {"role": "system",    "content": "\n\n".join(system_parts)},
+        {"role": "user",      "content": user_text},
+    ]
+    return messages
+
+
+def ollama_reply(user_text: str, tone_hint: str, temperature: float) -> str:
+    """
+    Call Ollama's chat API and return the assistant's reply text.
+    Falls back to rule_based_reply on any error.
+    """
+    if not _check_ollama():
+        return rule_based_reply(user_text)
+
+    payload = {
+        "model":    OLLAMA_MODEL,
+        "messages": _build_messages(user_text, tone_hint),
+        "stream":   False,
+        "options": {
+            "temperature":      max(0.1, min(1.0, temperature)),
+            "top_p":            0.85,
+            "repeat_penalty":   1.4,
+            "num_predict":      80,   # max tokens in reply
+        },
+    }
+
+    try:
+        r = requests.post(
+            f"{OLLAMA_HOST}/api/chat",
+            json=payload,
+            timeout=30,
+        )
+        r.raise_for_status()
+        data  = r.json()
+        reply = data.get("message", {}).get("content", "").strip()
+
+        if not reply:
+            return rule_based_reply(user_text)
+
+        # Basic quality gate: reject if reply is suspiciously short
+        if len(reply.split()) < 3:
+            return rule_based_reply(user_text)
+
+        return reply
+
+    except requests.exceptions.Timeout:
+        print("⚠️  Ollama request timed out.")
+        return rule_based_reply(user_text)
+    except Exception as e:
+        print(f"⚠️  Ollama error: {e}")
+        return rule_based_reply(user_text)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RESPOND  (main generation entry-point)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def respond(text: str) -> dict:
+    emo         = emotion_summary(text)
+    emotion     = emo["emotion"]
+    temperature = emo["temperature"]
+    tone_hint   = emo["tone_hint"]
+
+    reply = ollama_reply(text, tone_hint, temperature)
+
+    # Validate; if garbage, fall back to rule-based
+    passed, _ = filter_response(reply, text)
+    if not passed or len(reply.split()) < 3:
+        reply = rule_based_reply(text)
+
+    reply = apply_persona(reply, emotion, text)
+    score = score_response(reply, text)
+
+    return {
+        "reply":       reply,
+        "emotion":     emotion,
+        "temperature": temperature,
+        "tone_hint":   tone_hint,
+        "score":       score,
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DATASET LOGGING  (unchanged – keeps training data growing)
+# ══════════════════════════════════════════════════════════════════════════════
+
 FALLBACKS = [
     "i dont understand that fully",
     "can you say that differently",
     "hmm i am still learning",
     "tell me more",
 ]
-
-
-# ── Rule-based fallback responder ────────────────────────────────────────────
-# Used when the LSTM output fails filters. Clean, coherent replies guaranteed.
-
-RULE_RESPONSES = [
-    # greetings
-    (["hi", "hello", "hey", "sup", "yo"],
-     ["hey there! how are you doing?", "hello! what's on your mind?", "hi! good to hear from you."]),
-    # farewells
-    (["bye", "goodbye", "see you", "later", "cya"],
-     ["goodbye! take care.", "see you later!", "bye! come back anytime."]),
-    # how are you
-    (["how are you", "how r u", "how do you feel", "you ok"],
-     ["i'm doing well, thanks for asking!", "i'm great! how about you?", "all good here. what's up?"]),
-    # name
-    (["your name", "who are you", "what are you"],
-     ["i'm phoenix, your ai companion.", "my name is phoenix. nice to meet you!", "i'm phoenix — here to chat."]),
-    # thanks
-    (["thank", "thanks", "thx", "ty"],
-     ["you're welcome!", "anytime!", "happy to help."]),
-    # sorry / apology
-    (["sorry", "my bad", "apolog"],
-     ["no worries at all!", "it's totally fine.", "don't worry about it."]),
-    # help
-    (["help", "assist", "support", "can you"],
-     ["of course! what do you need?", "sure, i'll do my best. what's up?", "i'm here to help — go ahead."]),
-    # feelings - sad
-    (["sad", "unhappy", "depressed", "lonely", "cry", "hurt"],
-     ["i'm sorry to hear that. want to talk about it?", "that sounds really tough. i'm here for you.", "i hear you. what's going on?"]),
-    # feelings - happy
-    (["happy", "great", "awesome", "excited", "amazing"],
-     ["that's wonderful! tell me more.", "love to hear that! what's got you excited?", "amazing! i'm glad things are going well."]),
-    # feelings - angry
-    (["angry", "frustrated", "annoyed", "mad", "furious"],
-     ["i get it — that sounds really frustrating.", "let's take a breath. what happened?", "i hear you. what's making you angry?"]),
-    # feelings - anxious
-    (["anxious", "nervous", "scared", "worried", "stress"],
-     ["it's okay to feel that way. i'm here with you.", "take it one step at a time — you've got this.", "let's talk it through. what's worrying you?"]),
-    # jokes
-    (["joke", "funny", "laugh", "humor"],
-     ["why did the robot go on vacation? it needed to recharge!", "what do you call a sleeping AI? a napbot.", "i told a joke once. it had good latency."]),
-    # weather
-    (["weather", "rain", "sunny", "temperature", "forecast"],
-     ["i don't have live weather data, but i hope it's nice where you are!", "wish i could check — try a weather app for the forecast."]),
-    # boredom
-    (["bored", "nothing to do", "boring"],
-     ["let's find something interesting to talk about! what do you enjoy?", "boredom is just opportunity in disguise — what do you feel like doing?", "tell me something about yourself and let's go from there."]),
-]
-
-GENERIC_FALLBACKS = [
-    "that's interesting — tell me more.",
-    "i'm listening. go on.",
-    "could you say a bit more about that?",
-    "hmm, what do you mean exactly?",
-    "i'd love to understand better — can you elaborate?",
-    "i'm still learning, but i'm all ears.",
-    "what's on your mind?",
-]
-
-
-def rule_based_reply(text: str) -> str:
-    """Fast keyword-matched fallback. Always returns clean, sensible text."""
-    t = text.lower()
-    for keywords, replies in RULE_RESPONSES:
-        if any(kw in t for kw in keywords):
-            return random.choice(replies)
-    return random.choice(GENERIC_FALLBACKS)
-
-
-def transformer_reply(text: str) -> str:
-    """
-    Try the fine-tuned transformer; validate output quality.
-    Fall back to rule_based_reply if output is garbage.
-    """
-    if ft_model is None or ft_tokenizer is None:
-        return rule_based_reply(text)
-
-    try:
-        inputs = ft_tokenizer(
-            text,
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-        )
-        outputs = ft_model.generate(
-            inputs["input_ids"],
-            attention_mask        = inputs["attention_mask"],
-            max_new_tokens        = 40,
-            do_sample             = True,
-            temperature           = 0.55,
-            top_p                 = 0.85,
-            repetition_penalty    = 1.6,
-            no_repeat_ngram_size  = 3,
-            pad_token_id          = ft_tokenizer.eos_token_id,
-            eos_token_id          = ft_tokenizer.eos_token_id,
-            remove_invalid_values = True,
-        )
-        raw = ft_tokenizer.decode(
-            outputs[0][inputs["input_ids"].shape[-1]:],
-            skip_special_tokens=True,
-        ).strip()
-
-        # ── Quality gate: reject garbage transformer output ───────────────────
-        words = raw.split()
-        if not raw or len(words) < 2:
-            return rule_based_reply(text)
-
-        # Reject if >40% of words are title-cased random tokens (garbage signal)
-        title_ratio = sum(1 for w in words if w[0].isupper()) / len(words)
-        if title_ratio > 0.4:
-            return rule_based_reply(text)
-
-        # Reject if uniqueness is very low (repetitive garbage)
-        if len(set(words)) / len(words) < 0.5:
-            return rule_based_reply(text)
-
-        # Reject if it contains special chars typical of bad generation
-        if any(c in raw for c in ["}", "{", ")", "(", ">>", "<<", "►", "▶"]):
-            return rule_based_reply(text)
-
-        return raw
-
-    except Exception as e:
-        print(f"⚠️  Transformer generation error: {e}")
-        return rule_based_reply(text)
-
-
-# ── Response generation ───────────────────────────────────────────────────────
-
-def respond(text: str) -> dict:
-    # 1. Emotion analysis
-    emo         = emotion_summary(text)
-    emotion     = emo["emotion"]
-    temperature = emo["temperature"]
-    tone_hint   = emo["tone_hint"]
-
-    best_reply = None
-    best_score = -1.0
-
-    # 2. Try LSTM path if model is loaded
-    if model is not None and dataset is not None:
-        model.eval()
-
-        profile_ctx   = build_profile_string()
-        memory_ctx    = build_context_string(n=5, session_id=current_session)
-        context_parts = []
-        if profile_ctx:
-            context_parts.append(profile_ctx)
-        if tone_hint:
-            context_parts.append(tone_hint)
-        if memory_ctx:
-            context_parts.append(memory_ctx)
-        context_parts.append(text.lower())
-        context = " ".join(context_parts)
-
-        src = dataset.encode(context, add_special=False).unsqueeze(0)
-
-        candidates = []
-        for _ in range(3):
-            try:
-                token_indices = model.generate(
-                    src,
-                    max_len     = dataset.max_len,
-                    temperature = temperature,
-                    bos_idx     = dataset.bos_idx,
-                    pad_idx     = dataset.pad_idx,
-                    eos_idx     = dataset.eos_idx,
-                )
-                if token_indices:
-                    reply = dataset.decode(token_indices, skip_special=True).strip()
-                    if reply:
-                        candidates.append(reply)
-            except Exception as e:
-                print(f"⚠️  LSTM generation error: {e}")
-
-        for candidate in candidates:
-            passed, _ = filter_response(candidate, text)
-            if passed:
-                s = score_response(candidate, text)
-                if s > best_score:
-                    best_score = s
-                    best_reply = candidate
-
-    # 3. Validate final reply quality
-    passed, _ = filter_response(best_reply or "", text)
-
-    # Fall back to transformer if LSTM failed
-    if (
-        best_reply is None
-        or len(best_reply.split()) < 4
-        or not passed
-    ):
-        best_reply = transformer_reply(text)
-
-        # Validate transformer output too
-        passed_tf, _ = filter_response(best_reply or "", text)
-
-        # Final safety fallback
-        if (
-            best_reply is None
-            or len(best_reply.split()) < 4
-            or not passed_tf
-        ):
-            best_reply = rule_based_reply(text)
-
-    return {
-        "reply":       best_reply,
-        "emotion":     emotion,
-        "temperature": temperature,
-        "tone_hint":   tone_hint,
-        "score":       best_score,
-    }
-
-
-# ── Online learning ───────────────────────────────────────────────────────────
-
-def online_update(user_text: str, reply_text: str, approved: bool):
-    global approved_count
-
-    if model is None or dataset is None or online_optimizer is None:
-        return 0.0
-
-    model.train()
-
-    memory_ctx = build_context_string(n=5, session_id=current_session)
-    context    = (memory_ctx + " " + user_text).strip()
-
-    src = dataset.encode(context, add_special=False).unsqueeze(0)
-    trg = dataset.encode(reply_text, add_special=True).unsqueeze(0)
-
-    online_optimizer.zero_grad()
-    outputs = model(src, trg, teacher_forcing_ratio=1.0)
-
-    B, T, V = outputs.shape
-    loss = criterion(outputs.reshape(B * T, V), trg.reshape(B * T))
-
-    if approved:
-        loss.backward()
-        approved_count += 1
-        torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
-        online_optimizer.step()
-
-        if approved_count % SAVE_EVERY == 0:
-            save_checkpoint()
-
-    return loss.item()
-
-
-def save_checkpoint():
-    if model is None or dataset is None:
-        return
-    os.makedirs("models", exist_ok=True)
-    torch.save({
-        "model":  model.state_dict(),
-        "vocab":  dataset.word2idx,
-        "config": {
-            "vocab_size":  vocab_size,
-            "embed_size":  cfg.get("embed_size", 64),
-            "hidden_size": cfg.get("hidden_size", 128),
-        }
-    }, PHOENIX_PT)
 
 
 def save_to_dataset(user: str, bot: str):
@@ -363,22 +305,35 @@ def save_to_dataset(user: str, bot: str):
         f.write(f"{user}={bot}\n")
 
 
-# ── Chat step (used by both CLI and web UI) ───────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# SESSION STATE
+# ══════════════════════════════════════════════════════════════════════════════
+
+current_session = new_session()
+turn_number     = 0
+
+# These are kept for API compatibility with web_ui.py
+model           = None   # no LSTM
+ft_model        = None   # no transformer
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CHAT STEP  (used by both CLI and web_ui.py)
+# ══════════════════════════════════════════════════════════════════════════════
 
 def chat_step(text: str) -> dict:
     global turn_number
 
-    text = text.strip()
-
-    # Extract facts before generating
+    text      = text.strip()
     new_facts = extract_and_save_facts(text)
 
-    # Special: name query
+    # Special: name query answered from memory
     if "what is my name" in text.lower():
         facts = get_all_facts()
         if "name" in facts:
+            name_reply = apply_persona(f"your name is {facts['name']}", "neutral", text)
             return {
-                "reply":       f"your name is {facts['name']}",
+                "reply":       name_reply,
                 "emotion":     "neutral",
                 "temperature": 0.1,
                 "tone_hint":   "",
@@ -391,16 +346,13 @@ def chat_step(text: str) -> dict:
     reply   = result["reply"]
     emotion = result["emotion"]
 
-    # Auto-learn on quality replies
     passed, _ = filter_response(reply, text)
     learned   = False
 
     if passed and reply not in FALLBACKS:
-        online_update(text.lower(), reply, approved=True)
         save_to_dataset(text.lower(), reply)
         learned = True
 
-    # Persist turn to memory DB
     turn_number += 1
     save_turn(
         session_id = current_session,
@@ -422,29 +374,42 @@ def chat_step(text: str) -> dict:
     }
 
 
-# ── CLI loop ──────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# STUBS  (keep web_ui.py happy – no-ops since Ollama handles generation)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def save_checkpoint():
+    """No-op: Qwen weights are managed by Ollama, not saved here."""
+    pass
+
+
+def online_update(user_text: str, reply_text: str, approved: bool):
+    """No-op: fine-tuning is handled offline via Ollama model management."""
+    return 0.0
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CLI LOOP
+# ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    lstm_status = "✅ LSTM" if model else "❌ no LSTM"
-    tf_status   = "✅ Transformer" if ft_model else "❌ no Transformer"
-    print(f"Phoenix ready  [{lstm_status}  |  {tf_status}]")
+    ollama_ok = _check_ollama()
+    print(f"Phoenix ready  [Ollama: {'✅' if ollama_ok else '❌'}  |  model: {OLLAMA_MODEL}]")
     print(f"Session: {current_session}")
-    print("Commands: /reset  /memory  /save  /stats  exit\n")
+    print("Commands: /reset  /memory  /facts  /stats  exit\n")
 
     while True:
         try:
             text = input("You: ").strip()
         except (EOFError, KeyboardInterrupt):
             print("\nGoodbye.")
-            save_checkpoint()
             break
 
         if not text:
             continue
 
         if text.lower() == "exit":
-            save_checkpoint()
-            print("Phoenix: Goodbye! (model saved)")
+            print("Phoenix: Goodbye!")
             break
 
         if text.lower() == "/reset":
@@ -462,9 +427,9 @@ if __name__ == "__main__":
                     print(f"  [{i}] [{t['emotion']}] You: {t['user_text']} | Phoenix: {t['bot_text']}")
             continue
 
-        if text.lower() == "/save":
-            save_checkpoint()
-            print(f"Phoenix: Saved. ({approved_count} updates this session)")
+        if text.lower() == "/facts":
+            facts = get_all_facts()
+            print(f"Phoenix: Known facts: {facts}")
             continue
 
         if text.lower() == "/stats":
@@ -475,11 +440,8 @@ if __name__ == "__main__":
             continue
 
         result = chat_step(text)
-        emoji  = {"sad": "🤗", "angry": "😌", "anxious": "😊", "happy": "😄", "confused": "🤔"}.get(result["emotion"], "")
+        emoji  = {"sad": "🤗", "angry": "😌", "anxious": "😊",
+                  "happy": "😄", "confused": "🤔"}.get(result["emotion"], "")
         print(f"Phoenix {emoji}: {result['reply']}")
-        if result["learned"]:
-            print(f"    Auto-learned  [emotion={result['emotion']}, score={result['score']:.2f}]")
-        else:
-            print(f"    Not learned  [emotion={result['emotion']}]")
         if result["new_facts"]:
             print(f"   Learned about you: {result['new_facts']}")

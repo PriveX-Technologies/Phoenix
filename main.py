@@ -1,3 +1,15 @@
+"""
+main.py  –  Phoenix launcher (Ollama / Qwen backend)
+
+Starts the web UI directly – no training or dataset generation needed.
+Ollama must be running with the Qwen model pulled before launching.
+
+Quick-start:
+    ollama pull qwen2.5
+    ollama serve          # in a separate terminal (or it may already be running)
+    python main.py
+"""
+
 import os
 import sys
 import time
@@ -5,39 +17,37 @@ import threading
 import webbrowser
 import subprocess
 
-model_path = "models/phoenix.pt"
-data_path  = "data/real_data.txt"
+# ── Optional: override model via env ─────────────────────────────────────────
+# OLLAMA_MODEL=qwen2.5:72b python main.py
+model_name = os.environ.get("OLLAMA_MODEL", "qwen2.5")
+host       = os.environ.get("OLLAMA_HOST",  "http://localhost:11434")
 
-def data_exists():
-    return os.path.exists(data_path) and os.path.getsize(data_path) > 0
+print("╔══════════════════════════════════════════╗")
+print("║           Phoenix AI  –  Ollama           ║")
+print("╚══════════════════════════════════════════╝")
+print(f"  Backend : {host}")
+print(f"  Model   : {model_name}")
+print()
 
-def model_exists():
-    return os.path.exists(model_path) and os.path.getsize(model_path) > 0
+# ── Quick pre-flight: is Ollama reachable? ────────────────────────────────────
+try:
+    import requests
+    r = requests.get(f"{host}/api/tags", timeout=3)
+    tags = [m.get("name", "") for m in r.json().get("models", [])]
+    if not any(model_name in t for t in tags):
+        print(f"⚠️  Model '{model_name}' not found in Ollama.")
+        print(f"   Run:  ollama pull {model_name}")
+        print(f"   Available models: {tags or '(none)'}\n")
+        # Continue anyway – inference.py will use rule-based fallback
+    else:
+        print(f"✅ Model '{model_name}' ready.\n")
+except Exception as e:
+    print(f"⚠️  Cannot reach Ollama at {host}: {e}")
+    print("   Make sure Ollama is running:  ollama serve\n")
+    # Continue – web UI will still start; error shown on /status
 
-def run_script(script_path):
-    try:
-        subprocess.run([sys.executable, script_path], check=True)
-    except subprocess.CalledProcessError:
-        print(f"\n❌ Failed: {script_path}")
-        sys.exit(1)
-
-# Step 1: Dataset Check[cite: 3]
-if not data_exists():
-    print("📦 Generating dataset...")
-    run_script("src/prepare_data.py")
-else:
-    count = sum(1 for _ in open(data_path, encoding="utf-8"))
-    print(f"📦 Dataset ready ({count} pairs)")
-
-# Step 2: Model Check[cite: 3]
-if not model_exists():
-    print("\n🔥 Training Phoenix...")
-    run_script("src/train.py")
-else:
-    print("🧠 Model ready")
-
-# Step 3: Launch UI[cite: 3]
-print("\n🚀 Starting Phoenix Web UI...")
+# ── Launch UI ─────────────────────────────────────────────────────────────────
+print("🚀 Starting Phoenix Web UI...")
 
 def open_browser():
     time.sleep(2)
@@ -46,7 +56,6 @@ def open_browser():
 threading.Thread(target=open_browser, daemon=True).start()
 
 try:
-    # Use 'web_ui.py' verbatim as requested[cite: 3]
     subprocess.run([sys.executable, "src/web_ui.py"])
 except KeyboardInterrupt:
     print("\n👋 Phoenix stopped.")
