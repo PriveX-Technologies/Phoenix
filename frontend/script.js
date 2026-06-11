@@ -1,3 +1,4 @@
+import { PhoenixAnimator } from "./animation.js";
 let factsOpen = false;
 
 function toggleFacts() {

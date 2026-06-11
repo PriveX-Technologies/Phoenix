@@ -529,73 +529,19 @@ let activeAction = null; // currently playing AnimationAction
 const loadingEl = document.getElementById('loading');
 const loader    = new GLTFLoader();
 
+let animator;
+
 loader.load(
-  'assets/3dModel/cyber_samurai.glb',
-  (gltf) => {
-    avatar = gltf.scene;
+    "assets/3dModel/cyber_samurai.glb",
+    (gltf) => {
 
-    // ── Scale & centre ────────────────────────────────────────────
-    const box    = new THREE.Box3().setFromObject(avatar);
-    const size   = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
+        model = gltf.scene;
 
-    const targetH = 2.4;
-    const scale   = targetH / size.y;
-    avatar.scale.setScalar(scale);
-    avatar.position.x = -center.x * scale;
-    avatar.position.y = -box.min.y * scale;
-    avatar.position.z = -center.z * scale;
+        scene.add(model);
 
-    // ── Shadows ───────────────────────────────────────────────────
-    avatar.traverse(child => {
-      if (child.isMesh) {
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        // Slightly boost metalness for the cyber look
-        if (child.material) {
-          child.material.envMapIntensity = 1.2;
-        }
-      }
-    });
+        animator = new PhoenixAnimator(model);
 
-    scene.add(avatar);
-
-    // ── Animation mixer ───────────────────────────────────────────
-    mixer = new THREE.AnimationMixer(avatar);
-
-    // Use built-in clips if the GLB has them, otherwise build procedural ones
-    if (gltf.animations && gltf.animations.length > 0) {
-      buildClipsFromGLTF(gltf.animations);
-    } else {
-      buildProceduralClips();
     }
-
-    // Start idle immediately
-    playClip('idle');
-
-    // Hide loading
-    loadingEl.classList.add('hidden');
-  },
-  (xhr) => {
-    const pct = Math.round(xhr.loaded / xhr.total * 100);
-    document.querySelector('.load-txt').textContent = `LOADING MODEL… ${pct}%`;
-  },
-  (err) => {
-    console.error('GLB load error:', err);
-    // Show a placeholder cube so the scene isn't empty
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 1.6, 0.4),
-      new THREE.MeshStandardMaterial({ color: 0x00e5ff, wireframe: true })
-    );
-    cube.position.y = 0.8;
-    scene.add(cube);
-    avatar = cube;
-    buildProceduralClips();
-    playClip('idle');
-    loadingEl.classList.add('hidden');
-  }
 );
 
 // ══════════════════════════════════════════════════════════════════
@@ -911,38 +857,15 @@ resize();
 new ResizeObserver(resize).observe(document.getElementById('viewport'));
 
 function animate() {
-  requestAnimationFrame(animate);
 
-  const dt = clock.getDelta();
-  tAnim += dt;
+    requestAnimationFrame(animate);
 
-  // ── Mixer ─────────────────────────────────────────────────────
-  if (mixer) mixer.update(dt);
-
-  // ── Animate particles ─────────────────────────────────────────
-  const pos = partGeo.attributes.position.array;
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    pos[i * 3 + 1] += partSpeeds[i];
-    if (pos[i * 3 + 1] > 5.5) {
-      pos[i * 3 + 1] = 0;
-      pos[i * 3]     = (Math.random() - 0.5) * 10;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 6;
+    if (animator) {
+        animator.update();
     }
-  }
-  partGeo.attributes.position.needsUpdate = true;
 
-  // ── Glow ring pulse ───────────────────────────────────────────
-  const pulse = 0.05 + 0.03 * Math.sin(tAnim * 2.2);
-  glowMat.opacity = pulse;
-  glowRing.scale.setScalar(1 + 0.04 * Math.sin(tAnim * 1.5));
+    renderer.render(scene, camera);
 
-  // ── Subtle camera breathe (unless user is orbiting) ───────────
-  if (!controls.active) {
-    camera.position.y += Math.sin(tAnim * 0.4) * 0.0003;
-  }
-
-  controls.update();
-  renderer.render(scene, camera);
 }
 animate();
 
