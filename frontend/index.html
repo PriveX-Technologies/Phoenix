@@ -529,19 +529,29 @@ let activeAction = null; // currently playing AnimationAction
 const loadingEl = document.getElementById('loading');
 const loader    = new GLTFLoader();
 
-let animator;
-
 loader.load(
-    "assets/3dModel/cyber_samurai.glb",
-    (gltf) => {
+  "assets/3dModel/cyber_samurai.glb",
+  (gltf) => {
 
-        model = gltf.scene;
+    avatar = gltf.scene;
 
-        scene.add(model);
+    scene.add(avatar);
 
-        animator = new PhoenixAnimator(model);
+    mixer = new THREE.AnimationMixer(avatar);
 
+    if (gltf.animations && gltf.animations.length > 0) {
+      buildClipsFromGLTF(gltf.animations);
+    } else {
+      buildProceduralClips();
     }
+
+    playClip("idle");
+
+    loadingEl.classList.add("hidden");
+
+    console.log("✅ Avatar Loaded");
+
+  }
 );
 
 // ══════════════════════════════════════════════════════════════════
@@ -860,8 +870,12 @@ function animate() {
 
     requestAnimationFrame(animate);
 
-    if (animator) {
-        animator.update();
+    const delta = clock.getDelta();
+
+    controls.update();
+
+    if (mixer) {
+        mixer.update(delta);
     }
 
     renderer.render(scene, camera);
