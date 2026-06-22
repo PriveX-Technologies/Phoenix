@@ -119,13 +119,27 @@ def build_context_string(n: int = 5, session_id: str = None) -> str:
 FACT_PATTERNS = [
     (r"\bmy name is (\w+)", "name"),
     (r"\bi am (\w+)", "name"),
+    (r"\bim (\w+)", "name"),                # im alice (no apostrophe)
+    (r"\bi'm (\w+)", "name"),               # i'm alice (with apostrophe)
+    (r"\bi'm called (\w+)", "name"),        # i'm called alex
+    (r"\bcall me (\w+)", "name"),          # call me alex
+    (r"\byou can call me (\w+)", "name"),  # you can call me sam
+    (r"\bi go by (\w+)", "name"),           # i go by taylor
+    (r"\bi am called (\w+)", "name"),      # i am called x
     (r"\bi('m| am) (\d+) years? old", "age"),
     (r"\bi live in ([\w\s]+)", "location"),
     (r"\bi('m| am) from ([\w\s]+)", "location"),
     (r"\bi work (at|for|as) ([\w\s]+)", "job"),
     (r"\bmy (favourite|favorite) ([\w]+) is ([\w\s]+)", None),  # dynamic key
     (r"\bi like ([\w\s]+)", "likes"),
+    (r"\bi love ([\w\s]+)", "likes"),
     (r"\bi (hate|dislike) ([\w\s]+)", "dislikes"),
+    (r"\bmy favourite ([\w]+) is ([\w\s]+)", None),
+    (r"\bmy favorite ([\w]+) is ([\w\s]+)", None),
+    (r"\bi was born in (\d{4})", "birth_year"),
+    (r"\bemail is ([\w@.\-+]+)", "email"),
+    (r"\bmy crush is ([\w\s]+)", "crush"),
+    (r"\bremember (?:that )?my crush is ([\w\s]+)", "crush"),
 ]
 
 
@@ -140,7 +154,12 @@ def extract_and_save_facts(text: str) -> dict:
             continue
 
         if key == "name":
-            value = match.group(match.lastindex).strip()
+            # name can be in different capture groups depending on pattern
+            try:
+                value = match.group(match.lastindex).strip()
+            except Exception:
+                # fallback to first captured group
+                value = match.group(1).strip()
             # ignore common false positives
             if value in {"a", "an", "the", "not", "just", "so", "very"}:
                 continue
@@ -157,20 +176,54 @@ def extract_and_save_facts(text: str) -> dict:
 
         elif key is None:
             # dynamic: "my favourite X is Y"
-            category = match.group(2)
-            value    = match.group(3).strip()
-            found[f"favourite_{category}"] = value
+            # dynamic pattern expected: "my favourite X is Y"
+            if match.lastindex and match.lastindex >= 3:
+                category = match.group(2)
+                value    = match.group(3).strip()
+                found[f"favourite_{category}"] = value
+            else:
+                # not the favourite pattern; skip here
+                continue
 
         elif key == "likes":
             found["likes"] = match.group(1).strip()
 
         elif key == "dislikes":
             found["dislikes"] = match.group(2).strip()
+        elif key == "crush":
+            # crush pattern captures the name in group 1
+            try:
+                value = match.group(1).strip()
+            except Exception:
+                value = match.group(match.lastindex).strip()
+            found["crush"] = value
 
     if found:
         save_facts(found)
+        return found
+
+    # If user asked to "remember ..." and nothing matched above, save as arbitrary note
+    if text_lower.startswith('remember '):
+        return save_arbitrary_remember(text_lower)
 
     return found
+
+
+def save_arbitrary_remember(text: str) -> dict:
+    """If user says 'remember <text>' without a specific key, store as a note.
+    Returns the fact dict saved, or {} if not applicable.
+    """
+    t = text.lower().strip()
+    m = re.search(r"\bremember (?:that )?(?P<note>.+)", t)
+    if not m:
+        return {}
+    note = m.group('note').strip()
+    # avoid saving trivial short words
+    if len(note) < 3:
+        return {}
+    key = f"note_{int(datetime.now().timestamp())}"
+    save_facts({key: note})
+    return {key: note}
 
 
 def save_facts(facts: dict):
@@ -183,6 +236,32 @@ def save_facts(facts: dict):
                 VALUES (?, ?, ?)
                 ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at
             """, (k, v, now))
+
+
+def detect_and_save_model_suggested_name(reply_text: str) -> dict:
+    """Detect phrases in model replies that suggest a name for the user.
+    Examples matched: "call you Alex", "let's call you Sam".
+    Returns saved facts dict if a name was stored, otherwise {}.
+    """
+    if not reply_text:
+        return {}
+    t = reply_text.lower()
+    # common phrasings where the model assigns a name
+    patterns = [
+        r"call you (\w+)",
+        r"let'?s call you (\w+)",
+        r"i'll call you (\w+)",
+        r"i will call you (\w+)",
+        r"how about i call you (\w+)",
+    ]
+    for p in patterns:
+        m = re.search(p, t)
+        if m:
+            name = m.group(1).strip()
+            if name and name not in {"you", "that", "this"}:
+                save_facts({"name": name})
+                return {"name": name}
+    return {}
 
 
 def get_all_facts() -> dict:

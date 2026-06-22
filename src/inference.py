@@ -21,7 +21,10 @@ from memory  import (
     new_session, save_turn, build_context_string,
     build_profile_string, extract_and_save_facts,
     get_all_facts, memory_stats, clear_session_memory,
+    save_facts,
 )
+import json
+import time
 from filters import filter_response, score_response
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -239,7 +242,15 @@ def respond(text: str, session_id: str) -> dict:
 
     reply = ollama_reply(text, tone_hint, temperature, session_id)
 
-    passed, _ = filter_response(reply, text)
+    # Determine whether this session has relaxed filtering enabled
+    try:
+        facts_all = get_all_facts()
+        nolimits_key = f"nolimits_{session_id}"
+        allow_loosened = facts_all.get(nolimits_key) == "1"
+    except Exception:
+        allow_loosened = False
+
+    passed, _ = filter_response(reply, text, allow_loosened=allow_loosened)
     if not passed or len(reply.split()) < 3:
         reply = rule_based_reply(text)
 
@@ -318,16 +329,62 @@ def chat_step(text: str, session_id: str = None) -> dict:
                 "learned": False,    "new_facts": new_facts, "score": 1.0,
             }
 
+    # Crush query answered from memory
+    _is_crush_query = (
+        "crush" in _name_q or
+        "my crush" in _name_q or
+        "crush name" in _name_q
+    )
+    if _is_crush_query:
+        facts = get_all_facts()
+        if "crush" in facts:
+            crush_reply = apply_persona(f"Your crush is {facts['crush'].title()}.", "neutral", text)
+            return {
+                "reply": crush_reply, "emotion": "neutral",
+                "temperature": 0.1,  "tone_hint": "",
+                "learned": False,    "new_facts": new_facts, "score": 1.0,
+            }
+
     result  = respond(text, session_id=sid)
     reply   = result["reply"]
     emotion = result["emotion"]
 
-    passed, _ = filter_response(reply, text)
+    passed, _ = filter_response(reply, text, allow_loosened=allow_loosened)
     learned   = False
 
     if passed and reply not in FALLBACKS:
         save_to_dataset(text.lower(), reply)
         learned = True
+
+    # Auto-accept model-suggested name proposals (if any)
+    try:
+        from memory import detect_and_save_model_suggested_name
+        auto_fact = detect_and_save_model_suggested_name(reply)
+        if auto_fact:
+            learned = True
+            # expose new_facts in the returned payload as well
+            if isinstance(auto_fact, dict):
+                # merge into new_facts below when returning
+                pass
+    except Exception:
+        auto_fact = {}
+
+    # If god mode is enabled for this session, persist the raw user+bot turn
+    try:
+        facts_all = get_all_facts()
+        god_key = f"godmode_{sid}"
+        if facts_all.get(god_key) == "1":
+            ts = int(time.time() * 1000)
+            note_key = f"god_{sid}_{ts}"
+            save_facts({note_key: json.dumps({"user": text, "bot": reply})})
+            learned = True
+            # include in new_facts return
+            if isinstance(auto_fact, dict):
+                auto_fact = {**auto_fact, note_key: (text + ' ||| ' + reply)}
+            else:
+                auto_fact = {note_key: (text + ' ||| ' + reply)}
+    except Exception:
+        pass
 
     # Increment module-level counter only for CLI session
     if session_id is None:
@@ -351,7 +408,7 @@ def chat_step(text: str, session_id: str = None) -> dict:
         "temperature": result["temperature"],
         "tone_hint":   result.get("tone_hint", ""),
         "learned":     learned,
-        "new_facts":   new_facts,
+        "new_facts":   {**new_facts, **(auto_fact if isinstance(auto_fact, dict) else {})},
         "score":       result["score"],
     }
 

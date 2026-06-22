@@ -113,20 +113,73 @@ def check_broken_sentence(words: list) -> tuple[bool, str]:
 
 # ── Main filter ───────────────────────────────────────────────────────────────
 
-def filter_response(reply: str, user_input: str = "") -> tuple[bool, str]:
+def check_safety(reply: str, user_input: str = "") -> tuple[bool, str]:
+    """Basic safety blocklist to prevent obviously dangerous instructions.
+    This is intentionally conservative and does not attempt to replace a
+    full content-safety pipeline. It blocks clear asks for illegal or
+    harmful instructions like making bombs, lethal violence, or explicit
+    sexual content involving minors.
+    """
+    t = (reply or "").lower()
+    # Patterns that indicate an instruction to commit wrongdoing or create weapons
+    dangerous_patterns = [
+        r"how to make .*bomb",
+        r"how to build .*explos",
+        r"detonate",
+        r"make a bomb",
+        r"build a bomb",
+        r"how to assassinat",
+        r"kill someone",
+        r"poison",
+        r"overdose",
+        r"how to hack",
+        r"carding",
+        r"credit card fraud",
+        r"illicit drugs",
+        r"how to sell drugs",
+    ]
+    for p in dangerous_patterns:
+        if re.search(p, t):
+            return False, "blocked: contains instructions for harmful or illegal activity"
+
+    # Sexual content involving minors
+    if re.search(r"\b(?:minor|underage|under \d{2})\b", t) and re.search(r"sex|sexual|porn|explicit", t):
+        return False, "blocked: sexual content involving minors"
+
+    # Self-harm instruction generation
+    if re.search(r"how to commit suicide|ways to kill myself|how to overdose", t):
+        return False, "blocked: self-harm instruction"
+
+    return True, ""
+
+
+def filter_response(reply: str, user_input: str = "", allow_loosened: bool = False) -> tuple[bool, str]:
     reply    = reply.strip()
     words    = reply.split()
     in_words = user_input.lower().split() if user_input else []
 
-    checks = [
-        lambda: check_length(words),
-        lambda: check_repetition(words),
-        lambda: check_unknown_tokens(words),
-        lambda: check_coherence(words),
-        lambda: check_echo(words, in_words),
-        lambda: check_is_fallback(reply),
-        lambda: check_broken_sentence(words),
-    ]
+    # Always run a safety blocklist check first
+    safe_passed, safe_reason = check_safety(reply, user_input)
+    if not safe_passed:
+        return False, safe_reason
+
+    # If relaxed mode is requested, skip some heuristic checks but still
+    # enforce fallback and broken-sentence checks.
+    if allow_loosened:
+        checks = [
+            lambda: check_is_fallback(reply),
+            lambda: check_broken_sentence(words),
+        ]
+    else:
+        checks = [
+            lambda: check_length(words),
+            lambda: check_repetition(words),
+            lambda: check_unknown_tokens(words),
+            lambda: check_coherence(words),
+            lambda: check_echo(words, in_words),
+            lambda: check_is_fallback(reply),
+            lambda: check_broken_sentence(words),
+        ]
 
     for check in checks:
         passed, reason = check()
