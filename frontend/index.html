@@ -1,1722 +1,2347 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Phoenix</title>
-<link rel="icon" type="image/png" href="./assets/image/Phoenix.png">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Phoenix</title>
+        <link rel="icon" type="image/png" href="./assets/image/PhoenixNoText.png" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+            rel="stylesheet"
+        />
 
-<style>
-/* ── Reset & root ─────────────────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:          #03040a;
-  --panel:       #080c18;
-  --border:      #1a2540;
-  --accent:      #00e5ff;
-  --accent2:     #7c3aed;
-  --accent3:     #ff2d78;
-  --text:        #cdd6f4;
-  --text-dim:    #6272a4;
-  --glow:        0 0 18px rgba(0,229,255,.35);
-  --glow-strong: 0 0 32px rgba(0,229,255,.65);
-  --radius:      12px;
-  --ff-head:     'Orbitron', sans-serif;
-  --ff-mono:     'Share Tech Mono', monospace;
-}
+        <style>
+            /* ── Reset & root ─────────────────────────────────────────────────── */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            :root {
+                --bg: #03040a;
+                --panel: #080c18;
+                --border: #1a2540;
+                --accent: #00e5ff;
+                --accent2: #7c3aed;
+                --accent3: #ff2d78;
+                --text: #cdd6f4;
+                --text-dim: #6272a4;
+                --glow: 0 0 18px rgba(0, 229, 255, 0.35);
+                --glow-strong: 0 0 32px rgba(0, 229, 255, 0.65);
+                --radius: 12px;
+                --ff-head: "Orbitron", sans-serif;
+                --ff-mono: "Share Tech Mono", monospace;
+            }
 
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--ff-mono)}
+            html,
+            body {
+                height: 100%;
+                overflow: hidden;
+                background: var(--bg);
+                color: var(--text);
+                font-family: var(--ff-mono);
+            }
 
-/* ── Scanline overlay ────────────────────────────────────────────── */
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px);
-}
+            /* ── Scanline overlay ────────────────────────────────────────────── */
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 9999;
+                background: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(0, 0, 0, 0.07) 3px,
+                    rgba(0, 0, 0, 0.07) 4px
+                );
+            }
 
-/* ── Layout ──────────────────────────────────────────────────────── */
-#root{display:flex;height:100vh;gap:0}
+            /* ── Layout ──────────────────────────────────────────────────────── */
+            #root {
+                display: flex;
+                height: 100vh;
+                gap: 0;
+            }
 
-/* ── 3D Viewport ─────────────────────────────────────────────────── */
-#viewport{
-  flex:1 1 55%;position:relative;overflow:hidden;
-  background:radial-gradient(ellipse 80% 70% at 50% 90%,#0d1433 0%,#03040a 100%);
-}
-#three-canvas{display:block;width:100%;height:100%}
+            /* ── 3D Viewport ─────────────────────────────────────────────────── */
+            #viewport {
+                flex: 1 1 55%;
+                position: relative;
+                overflow: hidden;
+                background: radial-gradient(ellipse 80% 70% at 50% 90%, #0d1433 0%, #03040a 100%);
+            }
+            #three-canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
 
-/* ── Viewport HUD overlays ───────────────────────────────────────── */
-#hud-top{
-  position:absolute;top:18px;left:20px;right:20px;
-  display:flex;justify-content:space-between;align-items:flex-start;
-  pointer-events:none;
-}
-.phoenix-logo{
-    width:220px;
-    height:auto;
-    object-fit:contain;
-    filter: drop-shadow(0 0 15px rgba(255,80,0,.6));
-}
-.hud-title{font-family:var(--ff-head);font-size:1.05rem;font-weight:900;
-  color:var(--accent);letter-spacing:.18em;text-shadow:var(--glow)}
-.hud-sub{font-size:.62rem;color:var(--text-dim);letter-spacing:.12em;margin-top:3px}
+            /* ── Viewport HUD overlays ───────────────────────────────────────── */
+            #hud-top {
+                position: absolute;
+                top: 18px;
+                left: 20px;
+                right: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                pointer-events: none;
+            }
+            .phoenix-logo {
+                width: 220px;
+                height: auto;
+                object-fit: contain;
+                filter: drop-shadow(0 0 15px rgba(255, 80, 0, 0.6));
+            }
+            .hud-title {
+                font-family: var(--ff-head);
+                font-size: 1.05rem;
+                font-weight: 900;
+                color: var(--accent);
+                letter-spacing: 0.18em;
+                text-shadow: var(--glow);
+            }
+            .hud-sub {
+                font-size: 0.62rem;
+                color: var(--text-dim);
+                letter-spacing: 0.12em;
+                margin-top: 3px;
+            }
 
-#status-pill{
-  display:flex;align-items:center;gap:7px;
-  background:rgba(8,12,24,.75);border:1px solid var(--border);
-  border-radius:40px;padding:5px 14px;font-size:.7rem;
-  backdrop-filter:blur(8px);
-}
-.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;
-  box-shadow:0 0 8px #22c55e;animation:pulse-dot 2s ease-in-out infinite}
-@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+            #status-pill {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                background: rgba(8, 12, 24, 0.75);
+                border: 1px solid var(--border);
+                border-radius: 40px;
+                padding: 5px 14px;
+                font-size: 0.7rem;
+                backdrop-filter: blur(8px);
+            }
+            .dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #22c55e;
+                box-shadow: 0 0 8px #22c55e;
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+            @keyframes pulse-dot {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.4;
+                }
+            }
 
-/* Emotion badge */
-#emotion-badge{
-  position:absolute;bottom:24px;left:24px;
-  display:flex;align-items:center;gap:10px;
-  background:rgba(8,12,24,.8);border:1px solid var(--border);
-  border-radius:40px;padding:8px 18px;backdrop-filter:blur(10px);
-  font-size:.72rem;transition:border-color .4s,box-shadow .4s;
-}
-#emotion-icon{font-size:1.2rem;line-height:1}
-#emotion-label{color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-size:.65rem}
+            /* Emotion badge */
+            #emotion-badge {
+                position: absolute;
+                bottom: 24px;
+                left: 24px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: rgba(8, 12, 24, 0.8);
+                border: 1px solid var(--border);
+                border-radius: 40px;
+                padding: 8px 18px;
+                backdrop-filter: blur(10px);
+                font-size: 0.72rem;
+                transition:
+                    border-color 0.4s,
+                    box-shadow 0.4s;
+            }
+            #emotion-icon {
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+            #emotion-label {
+                color: var(--accent);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                font-size: 0.65rem;
+            }
 
-/* Corner brackets */
-.bracket{position:absolute;width:28px;height:28px;pointer-events:none}
-.bracket.tl{top:10px;left:10px;border-top:2px solid var(--accent);border-left:2px solid var(--accent)}
-.bracket.tr{top:10px;right:10px;border-top:2px solid var(--accent);border-right:2px solid var(--accent)}
-.bracket.bl{bottom:10px;left:10px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent)}
-.bracket.br{bottom:10px;right:10px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent)}
+            /* Corner brackets */
+            .bracket {
+                position: absolute;
+                width: 28px;
+                height: 28px;
+                pointer-events: none;
+            }
+            .bracket.tl {
+                top: 10px;
+                left: 10px;
+                border-top: 2px solid var(--accent);
+                border-left: 2px solid var(--accent);
+            }
+            .bracket.tr {
+                top: 10px;
+                right: 10px;
+                border-top: 2px solid var(--accent);
+                border-right: 2px solid var(--accent);
+            }
+            .bracket.bl {
+                bottom: 10px;
+                left: 10px;
+                border-bottom: 2px solid var(--accent);
+                border-left: 2px solid var(--accent);
+            }
+            .bracket.br {
+                bottom: 10px;
+                right: 10px;
+                border-bottom: 2px solid var(--accent);
+                border-right: 2px solid var(--accent);
+            }
 
-/* Loading overlay */
-#loading{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:16px;z-index:10;
-  background:var(--bg);transition:opacity .8s;
-}
-#loading.hidden{opacity:0;pointer-events:none}
-.load-ring{
-  width:56px;height:56px;border:3px solid var(--border);
-  border-top-color:var(--accent);border-radius:50%;
-  animation:spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-family:var(--ff-head);font-size:.75rem;color:var(--accent);letter-spacing:.2em}
+            /* Loading overlay */
+            #loading {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                z-index: 10;
+                background: var(--bg);
+                transition: opacity 0.8s;
+            }
+            #loading.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+            .load-ring {
+                width: 56px;
+                height: 56px;
+                border: 3px solid var(--border);
+                border-top-color: var(--accent);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            .load-txt {
+                font-family: var(--ff-head);
+                font-size: 0.75rem;
+                color: var(--accent);
+                letter-spacing: 0.2em;
+            }
 
-/* ── Chat panel ───────────────────────────────────────────────────── */
-#chat-panel{
-  flex:0 0 42%;max-width:500px;
-  display:flex;flex-direction:column;
-  background:var(--panel);border-left:1px solid var(--border);
-  overflow:hidden;
-}
+            /* ── Chat panel ───────────────────────────────────────────────────── */
+            #chat-panel {
+                flex: 0 0 42%;
+                max-width: 500px;
+                display: flex;
+                flex-direction: column;
+                background: var(--panel);
+                border-left: 1px solid var(--border);
+                overflow: hidden;
+            }
 
-/* Chat header */
-#chat-header{
-  padding:16px 22px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(0,229,255,.03);flex-shrink:0;
-}
-.chat-title{font-family:var(--ff-head);font-size:.78rem;font-weight:700;
-  color:var(--accent);letter-spacing:.2em}
-.chat-meta{font-size:.6rem;color:var(--text-dim);letter-spacing:.1em}
+            /* Chat header */
+            #chat-header {
+                padding: 16px 22px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: rgba(0, 229, 255, 0.03);
+                flex-shrink: 0;
+            }
+            .chat-title {
+                font-family: var(--ff-head);
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: var(--accent);
+                letter-spacing: 0.2em;
+            }
+            .chat-meta {
+                font-size: 0.6rem;
+                color: var(--text-dim);
+                letter-spacing: 0.1em;
+            }
 
-/* Messages */
-#messages{
-  flex:1;overflow-y:auto;padding:18px 16px;
-  display:flex;flex-direction:column;gap:12px;
-  scroll-behavior:smooth;
-}
-#messages::-webkit-scrollbar{width:4px}
-#messages::-webkit-scrollbar-track{background:transparent}
-#messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+            /* Messages */
+            #messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 18px 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                scroll-behavior: smooth;
+            }
+            #messages::-webkit-scrollbar {
+                width: 4px;
+            }
+            #messages::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            #messages::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 4px;
+            }
 
-.msg{max-width:88%;display:flex;flex-direction:column;gap:3px;animation:msg-in .25s ease}
-@keyframes msg-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+            .msg {
+                max-width: 88%;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                animation: msg-in 0.25s ease;
+            }
+            @keyframes msg-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
 
-.msg.user{align-self:flex-end;align-items:flex-end}
-.msg.bot {align-self:flex-start;align-items:flex-start}
+            .msg.user {
+                align-self: flex-end;
+                align-items: flex-end;
+            }
+            .msg.bot {
+                align-self: flex-start;
+                align-items: flex-start;
+            }
 
-.bubble{
-  padding:10px 14px;border-radius:var(--radius);font-size:.82rem;
-  line-height:1.55;word-break:break-word;position:relative;
-}
-.msg.user .bubble{
-  background:linear-gradient(135deg,var(--accent2),#4c1d95);
-  color:#fff;border-bottom-right-radius:3px;
-}
-.msg.bot .bubble{
-  background:#0d1530;border:1px solid var(--border);
-  color:var(--text);border-bottom-left-radius:3px;
-}
-.msg.bot .bubble::before{
-  content:'';position:absolute;left:-1px;top:0;bottom:0;width:3px;
-  border-radius:3px 0 0 3px;background:var(--accent);
-  transition:background .4s;
-}
+            .bubble {
+                padding: 10px 14px;
+                border-radius: var(--radius);
+                font-size: 0.82rem;
+                line-height: 1.55;
+                word-break: break-word;
+                position: relative;
+            }
+            .msg.user .bubble {
+                background: linear-gradient(135deg, var(--accent2), #4c1d95);
+                color: #fff;
+                border-bottom-right-radius: 3px;
+            }
+            .msg.bot .bubble {
+                background: #0d1530;
+                border: 1px solid var(--border);
+                color: var(--text);
+                border-bottom-left-radius: 3px;
+            }
+            .msg.bot .bubble::before {
+                content: "";
+                position: absolute;
+                left: -1px;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                border-radius: 3px 0 0 3px;
+                background: var(--accent);
+                transition: background 0.4s;
+            }
 
-.msg-meta{font-size:.58rem;color:var(--text-dim);letter-spacing:.05em;padding:0 4px}
+            .msg-meta {
+                font-size: 0.58rem;
+                color: var(--text-dim);
+                letter-spacing: 0.05em;
+                padding: 0 4px;
+            }
 
-/* Typing indicator */
-#typing{
-  display:none;align-items:center;gap:5px;padding:4px 14px;
-  background:#0d1530;border:1px solid var(--border);border-radius:var(--radius);
-  border-bottom-left-radius:3px;width:fit-content;
-}
-#typing.show{display:flex}
-.dot-t{width:6px;height:6px;border-radius:50%;background:var(--accent);
-  animation:bounce .9s ease-in-out infinite}
-.dot-t:nth-child(2){animation-delay:.15s}
-.dot-t:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+            /* Typing indicator */
+            #typing {
+                display: none;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 14px;
+                background: #0d1530;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                border-bottom-left-radius: 3px;
+                width: fit-content;
+            }
+            #typing.show {
+                display: flex;
+            }
+            .dot-t {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--accent);
+                animation: bounce 0.9s ease-in-out infinite;
+            }
+            .dot-t:nth-child(2) {
+                animation-delay: 0.15s;
+            }
+            .dot-t:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+            @keyframes bounce {
+                0%,
+                80%,
+                100% {
+                    transform: translateY(0);
+                }
+                40% {
+                    transform: translateY(-7px);
+                }
+            }
 
-/* Input area */
-#input-area{
-  padding:14px 16px;border-top:1px solid var(--border);
-  display:flex;gap:10px;align-items:flex-end;flex-shrink:0;
-  background:rgba(0,229,255,.02);
-}
-#user-input{
-  flex:1;background:#0a0f1e;border:1px solid var(--border);
-  border-radius:var(--radius);padding:11px 14px;
-  color:var(--text);font-family:var(--ff-mono);font-size:.82rem;
-  resize:none;outline:none;line-height:1.5;max-height:120px;overflow-y:auto;
-  transition:border-color .2s,box-shadow .2s;
-}
-#user-input:focus{border-color:var(--accent);box-shadow:var(--glow)}
-#user-input::placeholder{color:var(--text-dim)}
+            /* Input area */
+            #input-area {
+                padding: 14px 16px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                gap: 10px;
+                align-items: flex-end;
+                flex-shrink: 0;
+                background: rgba(0, 229, 255, 0.02);
+            }
+            #user-input {
+                flex: 1;
+                background: #0a0f1e;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 11px 14px;
+                color: var(--text);
+                font-family: var(--ff-mono);
+                font-size: 0.82rem;
+                resize: none;
+                outline: none;
+                line-height: 1.5;
+                max-height: 120px;
+                overflow-y: auto;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+            }
+            #user-input:focus {
+                border-color: var(--accent);
+                box-shadow: var(--glow);
+            }
+            #user-input::placeholder {
+                color: var(--text-dim);
+            }
 
-#send-btn{
-  background:linear-gradient(135deg,var(--accent),#0097a7);
-  border:none;border-radius:var(--radius);padding:11px 18px;
-  color:#000;font-family:var(--ff-head);font-size:.65rem;font-weight:700;
-  letter-spacing:.1em;cursor:pointer;transition:opacity .2s,transform .1s;
-  white-space:nowrap;flex-shrink:0;
-}
-#send-btn:hover{opacity:.85}
-#send-btn:active{transform:scale(.96)}
-#send-btn:disabled{opacity:.4;cursor:not-allowed}
+            #send-btn {
+                background: linear-gradient(135deg, var(--accent), #0097a7);
+                border: none;
+                border-radius: var(--radius);
+                padding: 11px 18px;
+                color: #000;
+                font-family: var(--ff-head);
+                font-size: 0.65rem;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                cursor: pointer;
+                transition:
+                    opacity 0.2s,
+                    transform 0.1s;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            #send-btn:hover {
+                opacity: 0.85;
+            }
+            #send-btn:active {
+                transform: scale(0.96);
+            }
+            #send-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
 
-/* Stats bar */
-#stats-bar{
-  padding:8px 18px;border-top:1px solid var(--border);
-  display:flex;gap:20px;font-size:.58rem;color:var(--text-dim);
-  letter-spacing:.08em;flex-shrink:0;
-}
-.stat-item span{color:var(--accent);margin-left:5px}
+            /* Stats bar */
+            #stats-bar {
+                padding: 8px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                gap: 20px;
+                font-size: 0.58rem;
+                color: var(--text-dim);
+                letter-spacing: 0.08em;
+                flex-shrink: 0;
+            }
+            .stat-item span {
+                color: var(--accent);
+                margin-left: 5px;
+            }
 
-/* Emotion color themes — applied to border accents */
-[data-emotion="happy"]   {--accent-emo:#facc15}
-[data-emotion="sad"]     {--accent-emo:#60a5fa}
-[data-emotion="angry"]   {--accent-emo:#f87171}
-[data-emotion="anxious"] {--accent-emo:#a78bfa}
-[data-emotion="confused"]{--accent-emo:#fb923c}
-[data-emotion="neutral"] {--accent-emo:#00e5ff}
+            /* Emotion color themes — applied to border accents */
+            [data-emotion="happy"] {
+                --accent-emo: #facc15;
+            }
+            [data-emotion="sad"] {
+                --accent-emo: #60a5fa;
+            }
+            [data-emotion="angry"] {
+                --accent-emo: #f87171;
+            }
+            [data-emotion="anxious"] {
+                --accent-emo: #a78bfa;
+            }
+            [data-emotion="confused"] {
+                --accent-emo: #fb923c;
+            }
+            [data-emotion="neutral"] {
+                --accent-emo: #00e5ff;
+            }
 
-/* Mobile */
-@media(max-width:740px){
-  #root{flex-direction:column}
-  #viewport{flex:0 0 42vh}
-  #chat-panel{flex:1;max-width:100%;border-left:none;border-top:1px solid var(--border)}
-}
+            /* Mobile */
+            @media (max-width: 740px) {
+                #root {
+                    flex-direction: column;
+                }
+                #viewport {
+                    flex: 0 0 42vh;
+                }
+                #chat-panel {
+                    flex: 1;
+                    max-width: 100%;
+                    border-left: none;
+                    border-top: 1px solid var(--border);
+                }
+            }
 
-/* ── Voice Panel ─────────────────────────────────────────────────── */
-#voice-panel{
-  border-top:1px solid var(--border);flex-shrink:0;
-  background:rgba(0,229,255,.018);
-}
-#voice-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 18px;cursor:pointer;user-select:none;
-}
-.voice-title{font-family:var(--ff-head);font-size:.65rem;color:var(--accent);
-  letter-spacing:.18em;display:flex;align-items:center;gap:8px}
-.voice-chevron{font-size:.7rem;color:var(--text-dim);transition:transform .25s}
-.voice-chevron.open{transform:rotate(180deg)}
+            /* ── Voice Panel ─────────────────────────────────────────────────── */
+            #voice-panel {
+                border-top: 1px solid var(--border);
+                flex-shrink: 0;
+                background: rgba(0, 229, 255, 0.018);
+            }
+            #voice-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 9px 18px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .voice-title {
+                font-family: var(--ff-head);
+                font-size: 0.65rem;
+                color: var(--accent);
+                letter-spacing: 0.18em;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .voice-chevron {
+                font-size: 0.7rem;
+                color: var(--text-dim);
+                transition: transform 0.25s;
+            }
+            .voice-chevron.open {
+                transform: rotate(180deg);
+            }
 
-#voice-body{
-  display:none;padding:0 18px 14px;
-  display:flex;flex-direction:column;gap:10px;
-}
-#voice-body.collapsed{display:none}
+            #voice-body {
+                display: none;
+                padding: 0 18px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            #voice-body.collapsed {
+                display: none;
+            }
 
-/* Toggle row */
-.voice-toggle-row{
-  display:flex;align-items:center;gap:10px;justify-content:space-between;
-}
-.vtoggle-label{font-size:.7rem;color:var(--text-dim);letter-spacing:.08em}
-.vtoggle{
-  position:relative;width:40px;height:22px;cursor:pointer;
-}
-.vtoggle input{display:none}
-.vtoggle-track{
-  position:absolute;inset:0;border-radius:22px;
-  background:var(--border);transition:background .25s;
-}
-.vtoggle input:checked + .vtoggle-track{background:var(--accent)}
-.vtoggle-thumb{
-  position:absolute;top:3px;left:3px;width:16px;height:16px;
-  border-radius:50%;background:#fff;
-  transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);
-}
-.vtoggle input:checked ~ .vtoggle-thumb{transform:translateX(18px)}
+            /* Toggle row */
+            .voice-toggle-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                justify-content: space-between;
+            }
+            .vtoggle-label {
+                font-size: 0.7rem;
+                color: var(--text-dim);
+                letter-spacing: 0.08em;
+            }
+            .vtoggle {
+                position: relative;
+                width: 40px;
+                height: 22px;
+                cursor: pointer;
+            }
+            .vtoggle input {
+                display: none;
+            }
+            .vtoggle-track {
+                position: absolute;
+                inset: 0;
+                border-radius: 22px;
+                background: var(--border);
+                transition: background 0.25s;
+            }
+            .vtoggle input:checked + .vtoggle-track {
+                background: var(--accent);
+            }
+            .vtoggle-thumb {
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #fff;
+                transition: transform 0.25s;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            }
+            .vtoggle input:checked ~ .vtoggle-thumb {
+                transform: translateX(18px);
+            }
 
-/* Voice selector */
-#voice-select{
-  width:100%;background:#0a0f1e;border:1px solid var(--border);
-  border-radius:8px;padding:7px 10px;color:var(--text);
-  font-family:var(--ff-mono);font-size:.72rem;outline:none;cursor:pointer;
-}
-#voice-select:focus{border-color:var(--accent)}
+            /* Voice selector */
+            #voice-select {
+                width: 100%;
+                background: #0a0f1e;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 7px 10px;
+                color: var(--text);
+                font-family: var(--ff-mono);
+                font-size: 0.72rem;
+                outline: none;
+                cursor: pointer;
+            }
+            #voice-select:focus {
+                border-color: var(--accent);
+            }
 
-/* Sliders */
-.vslider-row{display:flex;align-items:center;gap:8px}
-.vslider-label{font-size:.65rem;color:var(--text-dim);width:46px;flex-shrink:0}
-.vslider{
-  flex:1;-webkit-appearance:none;height:3px;
-  background:var(--border);border-radius:3px;outline:none;cursor:pointer;
-}
-.vslider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--accent);cursor:pointer;
-  box-shadow:0 0 6px rgba(0,229,255,.5);
-}
-.vslider-val{font-size:.62rem;color:var(--accent);width:30px;text-align:right;flex-shrink:0}
+            /* Sliders */
+            .vslider-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .vslider-label {
+                font-size: 0.65rem;
+                color: var(--text-dim);
+                width: 46px;
+                flex-shrink: 0;
+            }
+            .vslider {
+                flex: 1;
+                -webkit-appearance: none;
+                height: 3px;
+                background: var(--border);
+                border-radius: 3px;
+                outline: none;
+                cursor: pointer;
+            }
+            .vslider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: var(--accent);
+                cursor: pointer;
+                box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+            }
+            .vslider-val {
+                font-size: 0.62rem;
+                color: var(--accent);
+                width: 30px;
+                text-align: right;
+                flex-shrink: 0;
+            }
 
-/* Speak now button */
-#speak-test-btn{
-  background:transparent;border:1px solid var(--accent);border-radius:8px;
-  padding:6px 14px;color:var(--accent);font-family:var(--ff-mono);
-  font-size:.65rem;letter-spacing:.1em;cursor:pointer;
-  transition:background .2s;align-self:flex-start;
-}
-#speak-test-btn:hover{background:rgba(0,229,255,.1)}
+            /* Speak now button */
+            #speak-test-btn {
+                background: transparent;
+                border: 1px solid var(--accent);
+                border-radius: 8px;
+                padding: 6px 14px;
+                color: var(--accent);
+                font-family: var(--ff-mono);
+                font-size: 0.65rem;
+                letter-spacing: 0.1em;
+                cursor: pointer;
+                transition: background 0.2s;
+                align-self: flex-start;
+            }
+            #speak-test-btn:hover {
+                background: rgba(0, 229, 255, 0.1);
+            }
 
-/* Speaking indicator on viewport */
-#speaking-badge{
-  position:absolute;bottom:24px;right:24px;
-  display:none;align-items:center;gap:8px;
-  background:rgba(8,12,24,.82);border:1px solid var(--accent);
-  border-radius:40px;padding:6px 16px;backdrop-filter:blur(10px);
-  font-size:.68rem;color:var(--accent);letter-spacing:.1em;
-}
-#speaking-badge.show{display:flex}
-.sound-bars{display:flex;align-items:flex-end;gap:2px;height:14px}
-.sound-bar{
-  width:3px;border-radius:2px;background:var(--accent);
-  animation:sound-anim 0.7s ease-in-out infinite alternate;
-}
-.sound-bar:nth-child(2){animation-delay:.1s;animation-duration:.6s}
-.sound-bar:nth-child(3){animation-delay:.2s;animation-duration:.8s}
-.sound-bar:nth-child(4){animation-delay:.05s;animation-duration:.55s}
-.sound-bar:nth-child(5){animation-delay:.15s;animation-duration:.75s}
-@keyframes sound-anim{
-  from{height:3px;opacity:.5}
-  to{height:14px;opacity:1}
-}
+            /* Speaking indicator on viewport */
+            #speaking-badge {
+                position: absolute;
+                bottom: 24px;
+                right: 24px;
+                display: none;
+                align-items: center;
+                gap: 8px;
+                background: rgba(8, 12, 24, 0.82);
+                border: 1px solid var(--accent);
+                border-radius: 40px;
+                padding: 6px 16px;
+                backdrop-filter: blur(10px);
+                font-size: 0.68rem;
+                color: var(--accent);
+                letter-spacing: 0.1em;
+            }
+            #speaking-badge.show {
+                display: flex;
+            }
+            .sound-bars {
+                display: flex;
+                align-items: flex-end;
+                gap: 2px;
+                height: 14px;
+            }
+            .sound-bar {
+                width: 3px;
+                border-radius: 2px;
+                background: var(--accent);
+                animation: sound-anim 0.7s ease-in-out infinite alternate;
+            }
+            .sound-bar:nth-child(2) {
+                animation-delay: 0.1s;
+                animation-duration: 0.6s;
+            }
+            .sound-bar:nth-child(3) {
+                animation-delay: 0.2s;
+                animation-duration: 0.8s;
+            }
+            .sound-bar:nth-child(4) {
+                animation-delay: 0.05s;
+                animation-duration: 0.55s;
+            }
+            .sound-bar:nth-child(5) {
+                animation-delay: 0.15s;
+                animation-duration: 0.75s;
+            }
+            @keyframes sound-anim {
+                from {
+                    height: 3px;
+                    opacity: 0.5;
+                }
+                to {
+                    height: 14px;
+                    opacity: 1;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root">
+            <!-- ── 3D Viewport ──────────────────────────────────────────────── -->
+            <div id="viewport" data-emotion="neutral">
+                <canvas id="three-canvas"></canvas>
+                <img src="./assets/image/Phoenix.png" id="watermark-logo" />
 
-</style>
-</head>
-<body>
-<div id="root">
+                <!-- Corner brackets -->
+                <div class="bracket tl"></div>
+                <div class="bracket tr"></div>
+                <div class="bracket bl"></div>
+                <div class="bracket br"></div>
 
-  <!-- ── 3D Viewport ──────────────────────────────────────────────── -->
-  <div id="viewport" data-emotion="neutral">
-    <canvas id="three-canvas"></canvas>
-    <img src="./assets/image/Phoenix.png" id="watermark-logo">
+                <!-- HUD top -->
+                <div id="hud-top">
+                    <div>
+                        <img src="./assets/image/Phoenix.png" alt="Phoenix" class="phoenix-logo" />
+                    </div>
+                    <div id="status-pill">
+                        <div class="dot"></div>
+                        <span>ONLINE</span>
+                    </div>
+                </div>
 
-    <!-- Corner brackets -->
-    <div class="bracket tl"></div>
-    <div class="bracket tr"></div>
-    <div class="bracket bl"></div>
-    <div class="bracket br"></div>
+                <!-- Emotion badge -->
+                <div id="emotion-badge">
+                    <div id="emotion-icon">⚡</div>
+                    <div id="emotion-label">NEUTRAL</div>
+                </div>
 
-    <!-- HUD top -->
-    <div id="hud-top">
-<div>
-  <img src="./assets/image/Phoenix.png" alt="Phoenix" class="phoenix-logo">
-</div>
-      <div id="status-pill">
-        <div class="dot"></div>
-        <span>ONLINE</span>
-      </div>
-    </div>
+                <!-- Speaking badge -->
+                <div id="speaking-badge">
+                    <div class="sound-bars">
+                        <div class="sound-bar"></div>
+                        <div class="sound-bar"></div>
+                        <div class="sound-bar"></div>
+                        <div class="sound-bar"></div>
+                        <div class="sound-bar"></div>
+                    </div>
+                    <span>SPEAKING</span>
+                </div>
+                <!-- Loading -->
+                <div id="loading">
+                    <img src="./assets/image/Phoenix.png" class="loading-logo" />
+                    <div class="load-ring"></div>
+                    <div class="load-txt">INITIALISING PHOENIX</div>
+                </div>
+            </div>
+            <!-- ── Chat Panel ───────────────────────────────────────────────── -->
+            <div id="chat-panel">
+                <div id="chat-header">
+                    <div class="chat-title">
+                        <span>Phoenix</span>
+                    </div>
+                    <div class="chat-meta" id="session-meta">SESSION // 0000</div>
+                </div>
 
-    <!-- Emotion badge -->
-    <div id="emotion-badge">
-      <div id="emotion-icon">⚡</div>
-      <div id="emotion-label">NEUTRAL</div>
-    </div>
+                <div id="messages">
+                    <!-- Initial bot message -->
+                    <div class="msg bot">
+                        <div class="bubble">
+                            Hey — I'm Phoenix. Ask me anything. I'm always learning from our conversations.
+                        </div>
+                        <div class="msg-meta">PHOENIX // NOW</div>
+                    </div>
+                    <div id="typing">
+                        <div class="dot-t"></div>
+                        <div class="dot-t"></div>
+                        <div class="dot-t"></div>
+                    </div>
+                </div>
 
-    <!-- Speaking badge -->
-    <div id="speaking-badge">
-      <div class="sound-bars">
-        <div class="sound-bar"></div><div class="sound-bar"></div>
-        <div class="sound-bar"></div><div class="sound-bar"></div>
-        <div class="sound-bar"></div>
-      </div>
-      <span>SPEAKING</span>
-    </div>
-    <!-- Loading -->
-<div id="loading">
-  <img src="./assets/image/Phoenix.png" class="loading-logo">
-  <div class="load-ring"></div>
-  <div class="load-txt">INITIALISING PHOENIX</div>
-</div>
-</div> 
-  <!-- ── Chat Panel ───────────────────────────────────────────────── -->
-  <div id="chat-panel">
-    <div id="chat-header">
-<div class="chat-title">
-  <img src="./assets/image/Phoenix.png" class="chat-logo">
-  <span>Phoenix</span>
-</div>
-      <div class="chat-meta" id="session-meta">SESSION // 0000</div>
-    </div>
+                <div id="input-area">
+                    <textarea id="user-input" rows="1" placeholder="Talk to Phoenix…" maxlength="400"></textarea>
+                    <button id="send-btn">SEND</button>
+                </div>
 
-    <div id="messages">
-      <!-- Initial bot message -->
-      <div class="msg bot">
-        <div class="bubble">Hey — I'm Phoenix. Ask me anything. I'm always learning from our conversations.</div>
-        <div class="msg-meta">PHOENIX // NOW</div>
-      </div>
-      <div id="typing">
-        <div class="dot-t"></div><div class="dot-t"></div><div class="dot-t"></div>
-      </div>
-    </div>
+                <div id="voice-panel">
+                    <div id="voice-header" onclick="toggleVoicePanel()">
+                        <div class="voice-title">VOICE CONTROL</div>
+                        <div id="voice-chevron" class="voice-chevron">⌄</div>
+                    </div>
+                    <div id="voice-body" class="collapsed">
+                        <div class="voice-toggle-row">
+                            <span class="vtoggle-label">Voice Output</span>
+                            <label class="vtoggle">
+                                <input id="auto-speak-toggle" type="checkbox" checked />
+                                <span class="vtoggle-track"><span class="vtoggle-thumb"></span></span>
+                            </label>
+                        </div>
 
-    <div id="input-area">
-      <textarea id="user-input" rows="1" placeholder="Talk to Phoenix…" maxlength="400"></textarea>
-      <button id="send-btn">SEND</button>
-    </div>
+                        <select id="voice-select"></select>
 
-    <div id="voice-panel">
-      <div id="voice-header" onclick="toggleVoicePanel()">
-        <div class="voice-title">VOICE CONTROL</div>
-        <div id="voice-chevron" class="voice-chevron">⌄</div>
-      </div>
-      <div id="voice-body" class="collapsed">
-        <div class="voice-toggle-row">
-          <span class="vtoggle-label">Voice Output</span>
-          <label class="vtoggle">
-            <input id="auto-speak-toggle" type="checkbox" checked>
-            <span class="vtoggle-track"><span class="vtoggle-thumb"></span></span>
-          </label>
+                        <div class="vslider-row">
+                            <span class="vslider-label">VOL</span>
+                            <input
+                                id="vol-slider"
+                                class="vslider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value="0.9"
+                            />
+                            <span id="vol-val" class="vslider-val">0.9</span>
+                        </div>
+                        <div class="vslider-row">
+                            <span class="vslider-label">RATE</span>
+                            <input
+                                id="rate-slider"
+                                class="vslider"
+                                type="range"
+                                min="0.6"
+                                max="2.0"
+                                step="0.05"
+                                value="1.05"
+                            />
+                            <span id="rate-val" class="vslider-val">1.1</span>
+                        </div>
+                        <div class="vslider-row">
+                            <span class="vslider-label">PITCH</span>
+                            <input
+                                id="pitch-slider"
+                                class="vslider"
+                                type="range"
+                                min="0.5"
+                                max="2.0"
+                                step="0.05"
+                                value="1.0"
+                            />
+                            <span id="pitch-val" class="vslider-val">1.0</span>
+                        </div>
+
+                        <div class="voice-toggle-row">
+                            <span class="vtoggle-label">Voice Input</span>
+                            <button id="voice-listen-btn" class="speak-button" type="button">Start Listening</button>
+                        </div>
+                        <div
+                            id="voice-status"
+                            style="font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.08em"
+                        >
+                            Say something to Phoenix.
+                        </div>
+
+                        <button id="speak-test-btn" type="button">Test Voice Output</button>
+                    </div>
+                </div>
+
+                <div id="stats-bar">
+                    <div class="stat-item">TURNS<span id="s-turns">0</span></div>
+                    <div class="stat-item">LEARNED<span id="s-learned">0</span></div>
+                    <div class="stat-item">EMOTION<span id="s-emotion">—</span></div>
+                    <div class="stat-item">SCORE<span id="s-score">—</span></div>
+                </div>
+            </div>
         </div>
 
-        <select id="voice-select"></select>
-
-        <div class="vslider-row">
-          <span class="vslider-label">VOL</span>
-          <input id="vol-slider" class="vslider" type="range" min="0" max="1" step="0.05" value="0.9">
-          <span id="vol-val" class="vslider-val">0.9</span>
-        </div>
-        <div class="vslider-row">
-          <span class="vslider-label">RATE</span>
-          <input id="rate-slider" class="vslider" type="range" min="0.6" max="2.0" step="0.05" value="1.05">
-          <span id="rate-val" class="vslider-val">1.1</span>
-        </div>
-        <div class="vslider-row">
-          <span class="vslider-label">PITCH</span>
-          <input id="pitch-slider" class="vslider" type="range" min="0.5" max="2.0" step="0.05" value="1.0">
-          <span id="pitch-val" class="vslider-val">1.0</span>
-        </div>
-
-        <div class="voice-toggle-row">
-          <span class="vtoggle-label">Voice Input</span>
-          <button id="voice-listen-btn" class="speak-button" type="button">Start Listening</button>
-        </div>
-        <div id="voice-status" style="font-size:.72rem;color:var(--text-dim);letter-spacing:.08em;">Say something to Phoenix.</div>
-
-        <button id="speak-test-btn" type="button">Test Voice Output</button>
-      </div>
-    </div>
-
-    <div id="stats-bar">
-      <div class="stat-item">TURNS<span id="s-turns">0</span></div>
-      <div class="stat-item">LEARNED<span id="s-learned">0</span></div>
-      <div class="stat-item">EMOTION<span id="s-emotion">—</span></div>
-      <div class="stat-item">SCORE<span id="s-score">—</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Three.js ─────────────────────────────────────────────────────── -->
-<script type="importmap">
-{
-  "imports": {
-    "three":                   "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/":           "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
-<script type="module">
-import * as THREE   from 'three';
-import { createSpeechRecognition } from './voice-helper.js';
-import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-// ══════════════════════════════════════════════════════════════════
-//  SCENE SETUP
-// ══════════════════════════════════════════════════════════════════
-
-const canvas   = document.getElementById('three-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-renderer.toneMapping       = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
-renderer.outputColorSpace  = THREE.SRGBColorSpace;
-
-const scene  = new THREE.Scene();
-scene.fog    = new THREE.FogExp2(0x03040a, 0.04);
-
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-camera.position.set(0, 1.6, 3.8);
-camera.lookAt(0, 1.2, 0);
-
-// ── Orbit controls (subtle, limit rotation) ──────────────────────
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1.2, 0);
-controls.enablePan   = false;
-controls.enableZoom  = false;
-controls.minPolarAngle = Math.PI / 3;
-controls.maxPolarAngle = Math.PI / 1.8;
-controls.minAzimuthAngle = -Math.PI / 5;
-controls.maxAzimuthAngle =  Math.PI / 5;
-controls.enableDamping = true;
-controls.dampingFactor  = 0.08;
-controls.autoRotate     = true;
-controls.autoRotateSpeed = 0.35;
-controls.update();
-
-// ══════════════════════════════════════════════════════════════════
-//  LIGHTING
-// ══════════════════════════════════════════════════════════════════
-
-// Ambient — cool deep blue fill
-const ambient = new THREE.AmbientLight(0x0a0e1a, 0.9);
-scene.add(ambient);
-
-// Key light — cyan accent
-const keyLight = new THREE.DirectionalLight(0x00e5ff, 2.4);
-keyLight.position.set(-2.5, 5, 3);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(1024, 1024);
-keyLight.shadow.camera.near = 0.5;
-keyLight.shadow.camera.far  = 20;
-scene.add(keyLight);
-
-// Rim light — purple back rim
-const rimLight = new THREE.DirectionalLight(0x7c3aed, 1.6);
-rimLight.position.set(3, 3, -3);
-scene.add(rimLight);
-
-// Fill light — warm bottom fill
-const fillLight = new THREE.PointLight(0xff2d78, 0.7, 8);
-fillLight.position.set(0, -1, 2);
-scene.add(fillLight);
-
-// ── Emotion accent point light (changes color per emotion) ───────
-const emoLight = new THREE.PointLight(0x00e5ff, 1.2, 6);
-emoLight.position.set(0, 2.5, 1.5);
-scene.add(emoLight);
-
-// ── Ground grid ───────────────────────────────────────────────────
-const gridHelper = new THREE.GridHelper(14, 28, 0x1a2540, 0x0d1225);
-gridHelper.position.y = -0.01;
-scene.add(gridHelper);
-
-// ── Ground plane (receives shadow) ────────────────────────────────
-const groundGeo = new THREE.PlaneGeometry(20, 20);
-const groundMat = new THREE.MeshStandardMaterial({
-  color: 0x030510, roughness: 1, metalness: 0,
-  transparent: true, opacity: 0.92,
-});
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-ground.position.y = -0.01;
-scene.add(ground);
-
-// ── Ground glow plane ─────────────────────────────────────────────
-const glowGeo = new THREE.CircleGeometry(1.2, 48);
-const glowMat = new THREE.MeshBasicMaterial({
-  color: 0x00e5ff, transparent: true, opacity: 0.06, side: THREE.DoubleSide,
-});
-const glowRing = new THREE.Mesh(glowGeo, glowMat);
-glowRing.rotation.x = -Math.PI / 2;
-glowRing.position.y = 0.005;
-scene.add(glowRing);
-
-// ── Floating particles ─────────────────────────────────────────────
-const PARTICLE_COUNT = 280;
-const partGeo = new THREE.BufferGeometry();
-const positions = new Float32Array(PARTICLE_COUNT * 3);
-const partSpeeds = [];
-for (let i = 0; i < PARTICLE_COUNT; i++) {
-  positions[i * 3]     = (Math.random() - 0.5) * 10;
-  positions[i * 3 + 1] = Math.random() * 5;
-  positions[i * 3 + 2] = (Math.random() - 0.5) * 6;
-  partSpeeds.push(0.002 + Math.random() * 0.006);
-}
-partGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-const partMat = new THREE.PointsMaterial({
-  color: 0x00e5ff, size: 0.025, transparent: true, opacity: 0.55,
-  sizeAttenuation: true,
-});
-const particles = new THREE.Points(partGeo, partMat);
-scene.add(particles);
-
-// ══════════════════════════════════════════════════════════════════
-//  MODEL LOADING
-// ══════════════════════════════════════════════════════════════════
-
-let mixer      = null;   // AnimationMixer
-let avatar     = null;   // root Object3D
-let clips      = {};     // named animation clips (built procedurally)
-let activeAction = null; // currently playing AnimationAction
-
-const loadingEl = document.getElementById('loading');
-const loader    = new GLTFLoader();
-
-loader.load(
-  "assets/3dModel/cyber_samurai.glb",
-  (gltf) => {
-
-    avatar = gltf.scene;
-
-    scene.add(avatar);
-
-    mixer = new THREE.AnimationMixer(avatar);
-
-    if (gltf.animations && gltf.animations.length > 0) {
-      buildClipsFromGLTF(gltf.animations);
-    } else {
-      buildProceduralClips();
-    }
-
-    playClip("idle");
-
-    loadingEl.classList.add("hidden");
-
-    console.log("✅ Avatar Loaded");
-
-  }
-);
-
-// ══════════════════════════════════════════════════════════════════
-//  ANIMATION CLIPS
-// ══════════════════════════════════════════════════════════════════
-
-/**
- * If the GLB ships its own animation tracks, map them to our
- * emotion states by name. Falls back to procedural clips for
- * any emotion that doesn't have a matching clip.
- */
-function buildClipsFromGLTF(animations) {
-  const nameMap = {
-    idle:    ['idle','Idle','IDLE','T-Pose','TPose','stand','Stand'],
-    talking: ['talk','Talk','speak','Speak','chat','Chat','gesture','Gesture'],
-    happy:   ['happy','Happy','cheer','Cheer','dance','Dance','celebrate'],
-    sad:     ['sad','Sad','down','Down','droop','slump','Slump'],
-    angry:   ['angry','Angry','rage','Rage','attack','Attack','punch'],
-    anxious: ['anxious','nervous','Nervous','fidget','Fidget','shake'],
-    confused:['confused','Confused','look','shrug','Shrug'],
-    thinking:['think','Think','thinking','Thinking','ponder'],
-  };
-
-  const found = {};
-  for (const clip of animations) {
-    for (const [emotion, keys] of Object.entries(nameMap)) {
-      if (keys.some(k => clip.name.toLowerCase().includes(k.toLowerCase()))) {
-        found[emotion] = mixer.clipAction(clip);
-        break;
-      }
-    }
-  }
-
-  // Fill missing emotions with procedural clips
-  const allEmotions = ['idle','talking','happy','sad','angry','anxious','confused','thinking'];
-  for (const em of allEmotions) {
-    clips[em] = found[em] || buildProceduralClip(em);
-  }
-}
-
-/**
- * Build ALL clips procedurally (no GLB animations).
- */
-function buildProceduralClips() {
-  const emotions = ['idle','talking','happy','sad','angry','anxious','confused','thinking'];
-  for (const em of emotions) {
-    clips[em] = buildProceduralClip(em);
-  }
-}
-
-/**
- * Build a single procedural KeyframeTrack-based AnimationAction
- * that drives the avatar's root position/rotation/scale to
- * approximate the desired emotional state.
- */
-function buildProceduralClip(emotion) {
-  const root = avatar;
-
-  // All tracks animate the root object (position + rotation)
-  // Times in seconds
-  let tracks = [];
-  let duration = 2;
-
-  if (emotion === 'idle') {
-    // Gentle breathing bob: y oscillates ±0.015
-    duration = 3;
-    const t = [0, 0.75, 1.5, 2.25, 3];
-    const y = [0, 0.015, 0, -0.008, 0];
-    const yBase = root.position.y || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', t, t.map((_, i) => [0, yBase + y[i], 0]).flat()
-    ));
-    // Subtle sway
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 1.5, 3],
-      [...qFromEuler(0,0,0.008), ...qFromEuler(0,0,-0.008), ...qFromEuler(0,0,0.008)]
-    ));
-  }
-  else if (emotion === 'talking') {
-    // Rhythmic nod + slight forward lean
-    duration = 1.6;
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 0.2, 0.55, 0.85, 1.1, 1.45, 1.6],
-      [
-        ...qFromEuler(0, 0,   0),
-        ...qFromEuler(-0.04, 0, 0),
-        ...qFromEuler(0.02,  0, 0),
-        ...qFromEuler(-0.04, 0, 0),
-        ...qFromEuler(0.02,  0, 0),
-        ...qFromEuler(-0.02, 0, 0),
-        ...qFromEuler(0,     0, 0),
-      ]
-    ));
-    const yBase = root.position.y || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', [0, 0.4, 0.8, 1.2, 1.6],
-      [0,yBase,0,  0,yBase+0.018,0,  0,yBase,0,  0,yBase+0.018,0,  0,yBase,0]
-    ));
-  }
-  else if (emotion === 'happy') {
-    // Energetic bounce + tilt
-    duration = 1.2;
-    const yBase = root.position.y || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.05, 1.2],
-      [
-        0,yBase,0,  0,yBase+0.08,0,  0,yBase,0,
-        0,yBase+0.06,0, 0,yBase,0,
-        0,yBase+0.04,0, 0,yBase,0,
-        0,yBase+0.02,0, 0,yBase,0,
-      ]
-    ));
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 0.3, 0.6, 0.9, 1.2],
-      [...qFromEuler(0,0,0.05), ...qFromEuler(0,0,-0.05), ...qFromEuler(0,0,0.04),
-       ...qFromEuler(0,0,-0.02), ...qFromEuler(0,0,0)]
-    ));
-  }
-  else if (emotion === 'sad') {
-    // Slow slump forward + droop
-    duration = 4;
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 1.5, 2.5, 4],
-      [...qFromEuler(0,0,0), ...qFromEuler(0.08,0,0.015),
-       ...qFromEuler(0.06,0,-0.01), ...qFromEuler(0.03,0,0)]
-    ));
-    const yBase = root.position.y || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', [0, 2, 4],
-      [0,yBase,0, 0,yBase-0.04,0, 0,yBase,0]
-    ));
-  }
-  else if (emotion === 'angry') {
-    // Sharp tremor shake
-    duration = 0.7;
-    const xBase = root.position.x || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', [0,0.07,0.14,0.21,0.28,0.35,0.42,0.49,0.56,0.7],
-      [
-        xBase,0,0,  xBase+0.025,0,0,  xBase-0.025,0,0,
-        xBase+0.022,0,0, xBase-0.022,0,0,
-        xBase+0.018,0,0, xBase-0.018,0,0,
-        xBase+0.008,0,0, xBase-0.008,0,0,  xBase,0,0,
-      ]
-    ));
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 0.12, 0.25, 0.4, 0.7],
-      [...qFromEuler(-0.06,0,0), ...qFromEuler(-0.08,0.04,0),
-       ...qFromEuler(-0.06,0,0), ...qFromEuler(-0.04,0,0), ...qFromEuler(0,0,0)]
-    ));
-  }
-  else if (emotion === 'anxious') {
-    // Nervous quick bob + micro rotations
-    duration = 0.9;
-    const yBase = root.position.y || 0;
-    tracks.push(new THREE.VectorKeyframeTrack(
-      '.position', [0,0.12,0.24,0.36,0.48,0.6,0.72,0.9],
-      [0,yBase,0, 0,yBase+0.012,0, 0,yBase,0,
-       0,yBase+0.012,0, 0,yBase,0, 0,yBase+0.008,0, 0,yBase,0, 0,yBase,0]
-    ));
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 0.2, 0.45, 0.65, 0.9],
-      [...qFromEuler(0,0,0.02), ...qFromEuler(0,0,-0.02),
-       ...qFromEuler(0,0,0.015), ...qFromEuler(0,0,-0.015), ...qFromEuler(0,0,0)]
-    ));
-  }
-  else if (emotion === 'confused') {
-    // Head tilt left–right slow
-    duration = 2.5;
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 0.7, 1.4, 2.0, 2.5],
-      [...qFromEuler(0,0,0), ...qFromEuler(0,0,0.12),
-       ...qFromEuler(0,0,-0.08), ...qFromEuler(0,0,0.06), ...qFromEuler(0,0,0)]
-    ));
-  }
-  else if (emotion === 'thinking') {
-    // Slight lean back, subtle side sway
-    duration = 3;
-    tracks.push(new THREE.QuaternionKeyframeTrack(
-      '.quaternion', [0, 1, 2, 3],
-      [...qFromEuler(-0.03,0.06,0), ...qFromEuler(-0.05,0,0),
-       ...qFromEuler(-0.03,-0.06,0), ...qFromEuler(-0.03,0.06,0)]
-    ));
-  }
-
-  const clip   = new THREE.AnimationClip(emotion, duration, tracks);
-  const action = mixer.clipAction(clip);
-  action.setLoop(
-    ['idle','talking','anxious','thinking'].includes(emotion)
-      ? THREE.LoopRepeat
-      : THREE.LoopPingPong,
-    Infinity
-  );
-  return action;
-}
-
-function qFromEuler(x, y, z) {
-  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z));
-  return [q.x, q.y, q.z, q.w];
-}
-
-// ══════════════════════════════════════════════════════════════════
-//  ANIMATION CONTROLLER
-// ══════════════════════════════════════════════════════════════════
-
-const EMOTION_CONFIG = {
-  neutral:  { clip:'idle',     color:0x00e5ff, particleColor:0x00e5ff, rimColor:0x7c3aed, intensity:1.2 },
-  happy:    { clip:'happy',    color:0xfacc15, particleColor:0xfde047, rimColor:0xf59e0b, intensity:1.8 },
-  sad:      { clip:'sad',      color:0x60a5fa, particleColor:0x93c5fd, rimColor:0x3b82f6, intensity:0.7 },
-  angry:    { clip:'angry',    color:0xf87171, particleColor:0xff6060, rimColor:0xef4444, intensity:2.0 },
-  anxious:  { clip:'anxious',  color:0xa78bfa, particleColor:0xc4b5fd, rimColor:0x8b5cf6, intensity:1.4 },
-  confused: { clip:'confused', color:0xfb923c, particleColor:0xfdba74, rimColor:0xf97316, intensity:1.3 },
-};
-
-let currentEmotion = 'neutral';
-let isTalking = false;
-let talkTimer = null;
-const TALK_DURATION = 3500; // default fallback — overridden dynamically per reply
-
-function playClip(name, crossFadeDuration = 0.5) {
-  const next = clips[name];
-  if (!next) return;
-  if (activeAction === next) return;
-
-  if (activeAction) {
-    activeAction.crossFadeTo(next, crossFadeDuration, true);
-  }
-  next.reset().play();
-  activeAction = next;
-}
-
-function setEmotion(emotion) {
-  currentEmotion = emotion;
-  const cfg = EMOTION_CONFIG[emotion] || EMOTION_CONFIG.neutral;
-
-  // Update lighting
-  emoLight.color.setHex(cfg.color);
-  emoLight.intensity = cfg.intensity;
-
-  // Update particles
-  partMat.color.setHex(cfg.particleColor);
-
-  // Update rim light
-  rimLight.color.setHex(cfg.rimColor);
-
-  // Update glow ring
-  glowMat.color.setHex(cfg.color);
-
-  // Update UI
-  const viewport = document.getElementById('viewport');
-  viewport.dataset.emotion = emotion;
-  document.getElementById('emotion-badge').style.borderColor =
-    '#' + cfg.color.toString(16).padStart(6,'0');
-
-  const ICONS = { neutral:'⚡', happy:'✨', sad:'💧', angry:'🔥', anxious:'💫', confused:'❓' };
-  document.getElementById('emotion-icon').textContent  = ICONS[emotion] || '⚡';
-  document.getElementById('emotion-label').textContent = emotion.toUpperCase();
-  document.getElementById('s-emotion').textContent     = emotion;
-}
-
-/** Called when Phoenix starts replying.
- *  @param {string} emotion
- *  @param {number} [durationMs] — if provided, avatar stays in talk mode
- *    for this long (synced to TTS speech length). Falls back to TALK_DURATION.
- */
-function startTalking(emotion, durationMs) {
-  setEmotion(emotion);
-
-  const talkDuration = (durationMs && durationMs > 500) ? durationMs + 600 : TALK_DURATION;
-
-  // Play emotion clip first, then switch to talking
-  const emotionClip = emotion !== 'neutral' ? emotion : 'talking';
-  playClip(emotionClip, 0.3);
-
-  setTimeout(() => {
-    if (!isTalking) return;
-    playClip('talking', 0.4);
-  }, 800);
-
-  isTalking = true;
-  clearTimeout(talkTimer);
-  talkTimer = setTimeout(() => {
-    isTalking = false;
-    playClip('idle', 0.6);
-  }, talkDuration);
-}
-
-/** Called when the user is typing */
-function startThinking() {
-  if (!isTalking) playClip('thinking', 0.5);
-}
-
-function stopThinking() {
-  if (!isTalking) playClip('idle', 0.5);
-}
-
-// ══════════════════════════════════════════════════════════════════
-//  RENDER LOOP
-// ══════════════════════════════════════════════════════════════════
-
-const clock = new THREE.Clock();
-let tAnim = 0;
-
-function resize() {
-  const vp = document.getElementById('viewport');
-  const w  = vp.clientWidth;
-  const h  = vp.clientHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-}
-resize();
-new ResizeObserver(resize).observe(document.getElementById('viewport'));
-
-function animate() {
-
-    requestAnimationFrame(animate);
-
-    const delta = clock.getDelta();
-
-    controls.update();
-
-    if (mixer) {
-        mixer.update(delta);
-    }
-
-    renderer.render(scene, camera);
-
-}
-animate();
-
-// ══════════════════════════════════════════════════════════════════
-//  CHAT LOGIC
-// ══════════════════════════════════════════════════════════════════
-
-let turnCount   = 0;
-let learnCount  = 0;
-let typingTimer = null;
-
-const messagesEl  = document.getElementById('messages');
-const inputEl     = document.getElementById('user-input');
-const sendBtn     = document.getElementById('send-btn');
-const typingEl    = document.getElementById('typing');
-
-let recognition = null;
-let isVoiceListening = false;
-const voiceStatusEl = document.getElementById('voice-status');
-const voiceListenBtn = document.getElementById('voice-listen-btn');
-const speakTestBtn = document.getElementById('speak-test-btn');
-
-function setVoiceStatus(message) {
-  if (voiceStatusEl) {
-    voiceStatusEl.textContent = message;
-  }
-}
-
-function updateVoiceButton() {
-  if (!voiceListenBtn) return;
-  voiceListenBtn.textContent = isVoiceListening ? 'Stop Listening' : 'Start Listening';
-}
-
-function initVoiceInput() {
-  recognition = createSpeechRecognition(async transcript => {
-    isVoiceListening = false;
-    updateVoiceButton();
-    setVoiceStatus(`Heard: "${transcript}"`);
-    if (!transcript) return;
-    await sendVoiceMessage(transcript);
-  }, state => {
-    if (state === 'idle') {
-      isVoiceListening = false;
-      updateVoiceButton();
-      setVoiceStatus('Say something to Phoenix.');
-      return;
-    }
-    if (state.startsWith('error:')) {
-      setVoiceStatus(state.replace('error:', 'Voice error: '));
-      isVoiceListening = false;
-      updateVoiceButton();
-      return;
-    }
-    setVoiceStatus(state.charAt(0).toUpperCase() + state.slice(1));
-  });
-  if (!recognition) {
-    if (voiceListenBtn) {
-      voiceListenBtn.disabled = true;
-    }
-    setVoiceStatus('Voice input unavailable in this browser.');
-  }
-}
-
-async function sendVoiceMessage(text) {
-  if (!text) return;
-  turnCount++;
-  appendMessage('user', text);
-  showTyping();
-  startThinking();
-  try {
-    const res = await fetch('/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, allow_loosened: true }),
-    });
-    const data = await res.json();
-    hideTyping();
-    if (data.error) {
-      appendMessage('bot', `⚠ ${data.error}`);
-      stopThinking();
-    } else {
-      const emotion = data.emotion || 'neutral';
-      if (data.learned) learnCount++;
-      startTalking(emotion);
-      const estDurationMs = speakReply(data.reply, emotion);
-      startTalking(emotion, estDurationMs);
-      appendMessage('bot', data.reply);
-      updateStats(data);
-      if (data.new_facts && Object.keys(data.new_facts).length > 0) {
-        const factStr = Object.entries(data.new_facts)
-          .map(([k, v]) => `${k}: ${v}`).join(', ');
-        appendMessage('bot', `📎 Remembered — ${factStr}`);
-      }
-    }
-  } catch (err) {
-    hideTyping();
-    stopThinking();
-    appendMessage('bot', '⚠ Connection error. Is the server running?');
-  }
-}
-
-function scrollToBottom() {
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-function appendMessage(role, text, meta = '') {
-  // Remove typing indicator before appending
-  typingEl.classList.remove('show');
-  messagesEl.insertBefore(typingEl.parentNode === messagesEl
-    ? typingEl : typingEl, null);
-
-  const wrap = document.createElement('div');
-  wrap.className = `msg ${role}`;
-  wrap.innerHTML = `
+        <!-- ── Three.js ─────────────────────────────────────────────────────── -->
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+            import { createSpeechRecognition } from "./voice-helper.js";
+            import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+            // ══════════════════════════════════════════════════════════════════
+            //  SCENE SETUP
+            // ══════════════════════════════════════════════════════════════════
+
+            const canvas = document.getElementById("three-canvas");
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x03040a, 0.04);
+
+            const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+            camera.position.set(0, 1.6, 3.8);
+            camera.lookAt(0, 1.2, 0);
+
+            // ── Orbit controls (subtle, limit rotation) ──────────────────────
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1.2, 0);
+            controls.enablePan = false;
+            controls.enableZoom = false;
+            controls.minPolarAngle = Math.PI / 3;
+            controls.maxPolarAngle = Math.PI / 1.8;
+            controls.minAzimuthAngle = -Math.PI / 5;
+            controls.maxAzimuthAngle = Math.PI / 5;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.35;
+            controls.update();
+
+            // ══════════════════════════════════════════════════════════════════
+            //  LIGHTING
+            // ══════════════════════════════════════════════════════════════════
+
+            // Ambient — cool deep blue fill
+            const ambient = new THREE.AmbientLight(0x0a0e1a, 0.9);
+            scene.add(ambient);
+
+            // Key light — cyan accent
+            const keyLight = new THREE.DirectionalLight(0x00e5ff, 2.4);
+            keyLight.position.set(-2.5, 5, 3);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.set(1024, 1024);
+            keyLight.shadow.camera.near = 0.5;
+            keyLight.shadow.camera.far = 20;
+            scene.add(keyLight);
+
+            // Rim light — purple back rim
+            const rimLight = new THREE.DirectionalLight(0x7c3aed, 1.6);
+            rimLight.position.set(3, 3, -3);
+            scene.add(rimLight);
+
+            // Fill light — warm bottom fill
+            const fillLight = new THREE.PointLight(0xff2d78, 0.7, 8);
+            fillLight.position.set(0, -1, 2);
+            scene.add(fillLight);
+
+            // ── Emotion accent point light (changes color per emotion) ───────
+            const emoLight = new THREE.PointLight(0x00e5ff, 1.2, 6);
+            emoLight.position.set(0, 2.5, 1.5);
+            scene.add(emoLight);
+
+            // ── Ground grid ───────────────────────────────────────────────────
+            const gridHelper = new THREE.GridHelper(14, 28, 0x1a2540, 0x0d1225);
+            gridHelper.position.y = -0.01;
+            scene.add(gridHelper);
+
+            // ── Ground plane (receives shadow) ────────────────────────────────
+            const groundGeo = new THREE.PlaneGeometry(20, 20);
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: 0x030510,
+                roughness: 1,
+                metalness: 0,
+                transparent: true,
+                opacity: 0.92,
+            });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            ground.position.y = -0.01;
+            scene.add(ground);
+
+            // ── Ground glow plane ─────────────────────────────────────────────
+            const glowGeo = new THREE.CircleGeometry(1.2, 48);
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: 0x00e5ff,
+                transparent: true,
+                opacity: 0.06,
+                side: THREE.DoubleSide,
+            });
+            const glowRing = new THREE.Mesh(glowGeo, glowMat);
+            glowRing.rotation.x = -Math.PI / 2;
+            glowRing.position.y = 0.005;
+            scene.add(glowRing);
+
+            // ── Floating particles ─────────────────────────────────────────────
+            const PARTICLE_COUNT = 280;
+            const partGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            const partSpeeds = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 10;
+                positions[i * 3 + 1] = Math.random() * 5;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 6;
+                partSpeeds.push(0.002 + Math.random() * 0.006);
+            }
+            partGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+            const partMat = new THREE.PointsMaterial({
+                color: 0x00e5ff,
+                size: 0.025,
+                transparent: true,
+                opacity: 0.55,
+                sizeAttenuation: true,
+            });
+            const particles = new THREE.Points(partGeo, partMat);
+            scene.add(particles);
+
+            // ══════════════════════════════════════════════════════════════════
+            //  MODEL LOADING
+            // ══════════════════════════════════════════════════════════════════
+
+            let mixer = null; // AnimationMixer
+            let avatar = null; // root Object3D
+            let clips = {}; // named animation clips (built procedurally)
+            let activeAction = null; // currently playing AnimationAction
+
+            const loadingEl = document.getElementById("loading");
+            const loader = new GLTFLoader();
+
+            loader.load("assets/3dModel/cyber_samurai.glb", (gltf) => {
+                avatar = gltf.scene;
+
+                scene.add(avatar);
+
+                mixer = new THREE.AnimationMixer(avatar);
+
+                if (gltf.animations && gltf.animations.length > 0) {
+                    buildClipsFromGLTF(gltf.animations);
+                } else {
+                    buildProceduralClips();
+                }
+
+                playClip("idle");
+
+                loadingEl.classList.add("hidden");
+
+                console.log("✅ Avatar Loaded");
+            });
+
+            // ══════════════════════════════════════════════════════════════════
+            //  ANIMATION CLIPS
+            // ══════════════════════════════════════════════════════════════════
+
+            /**
+             * If the GLB ships its own animation tracks, map them to our
+             * emotion states by name. Falls back to procedural clips for
+             * any emotion that doesn't have a matching clip.
+             */
+            function buildClipsFromGLTF(animations) {
+                const nameMap = {
+                    idle: ["idle", "Idle", "IDLE", "T-Pose", "TPose", "stand", "Stand"],
+                    talking: ["talk", "Talk", "speak", "Speak", "chat", "Chat", "gesture", "Gesture"],
+                    happy: ["happy", "Happy", "cheer", "Cheer", "dance", "Dance", "celebrate"],
+                    sad: ["sad", "Sad", "down", "Down", "droop", "slump", "Slump"],
+                    angry: ["angry", "Angry", "rage", "Rage", "attack", "Attack", "punch"],
+                    anxious: ["anxious", "nervous", "Nervous", "fidget", "Fidget", "shake"],
+                    confused: ["confused", "Confused", "look", "shrug", "Shrug"],
+                    thinking: ["think", "Think", "thinking", "Thinking", "ponder"],
+                };
+
+                const found = {};
+                for (const clip of animations) {
+                    for (const [emotion, keys] of Object.entries(nameMap)) {
+                        if (keys.some((k) => clip.name.toLowerCase().includes(k.toLowerCase()))) {
+                            found[emotion] = mixer.clipAction(clip);
+                            break;
+                        }
+                    }
+                }
+
+                // Fill missing emotions with procedural clips
+                const allEmotions = ["idle", "talking", "happy", "sad", "angry", "anxious", "confused", "thinking"];
+                for (const em of allEmotions) {
+                    clips[em] = found[em] || buildProceduralClip(em);
+                }
+            }
+
+            /**
+             * Build ALL clips procedurally (no GLB animations).
+             */
+            function buildProceduralClips() {
+                const emotions = ["idle", "talking", "happy", "sad", "angry", "anxious", "confused", "thinking"];
+                for (const em of emotions) {
+                    clips[em] = buildProceduralClip(em);
+                }
+            }
+
+            /**
+             * Build a single procedural KeyframeTrack-based AnimationAction
+             * that drives the avatar's root position/rotation/scale to
+             * approximate the desired emotional state.
+             */
+            function buildProceduralClip(emotion) {
+                const root = avatar;
+
+                // All tracks animate the root object (position + rotation)
+                // Times in seconds
+                let tracks = [];
+                let duration = 2;
+
+                if (emotion === "idle") {
+                    // Gentle breathing bob: y oscillates ±0.015
+                    duration = 3;
+                    const t = [0, 0.75, 1.5, 2.25, 3];
+                    const y = [0, 0.015, 0, -0.008, 0];
+                    const yBase = root.position.y || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(".position", t, t.map((_, i) => [0, yBase + y[i], 0]).flat())
+                    );
+                    // Subtle sway
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 1.5, 3],
+                            [...qFromEuler(0, 0, 0.008), ...qFromEuler(0, 0, -0.008), ...qFromEuler(0, 0, 0.008)]
+                        )
+                    );
+                } else if (emotion === "talking") {
+                    // Rhythmic nod + slight forward lean
+                    duration = 1.6;
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 0.2, 0.55, 0.85, 1.1, 1.45, 1.6],
+                            [
+                                ...qFromEuler(0, 0, 0),
+                                ...qFromEuler(-0.04, 0, 0),
+                                ...qFromEuler(0.02, 0, 0),
+                                ...qFromEuler(-0.04, 0, 0),
+                                ...qFromEuler(0.02, 0, 0),
+                                ...qFromEuler(-0.02, 0, 0),
+                                ...qFromEuler(0, 0, 0),
+                            ]
+                        )
+                    );
+                    const yBase = root.position.y || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(
+                            ".position",
+                            [0, 0.4, 0.8, 1.2, 1.6],
+                            [0, yBase, 0, 0, yBase + 0.018, 0, 0, yBase, 0, 0, yBase + 0.018, 0, 0, yBase, 0]
+                        )
+                    );
+                } else if (emotion === "happy") {
+                    // Energetic bounce + tilt
+                    duration = 1.2;
+                    const yBase = root.position.y || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(
+                            ".position",
+                            [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.05, 1.2],
+                            [
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.08,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.06,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.04,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.02,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                            ]
+                        )
+                    );
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 0.3, 0.6, 0.9, 1.2],
+                            [
+                                ...qFromEuler(0, 0, 0.05),
+                                ...qFromEuler(0, 0, -0.05),
+                                ...qFromEuler(0, 0, 0.04),
+                                ...qFromEuler(0, 0, -0.02),
+                                ...qFromEuler(0, 0, 0),
+                            ]
+                        )
+                    );
+                } else if (emotion === "sad") {
+                    // Slow slump forward + droop
+                    duration = 4;
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 1.5, 2.5, 4],
+                            [
+                                ...qFromEuler(0, 0, 0),
+                                ...qFromEuler(0.08, 0, 0.015),
+                                ...qFromEuler(0.06, 0, -0.01),
+                                ...qFromEuler(0.03, 0, 0),
+                            ]
+                        )
+                    );
+                    const yBase = root.position.y || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(
+                            ".position",
+                            [0, 2, 4],
+                            [0, yBase, 0, 0, yBase - 0.04, 0, 0, yBase, 0]
+                        )
+                    );
+                } else if (emotion === "angry") {
+                    // Sharp tremor shake
+                    duration = 0.7;
+                    const xBase = root.position.x || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(
+                            ".position",
+                            [0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42, 0.49, 0.56, 0.7],
+                            [
+                                xBase,
+                                0,
+                                0,
+                                xBase + 0.025,
+                                0,
+                                0,
+                                xBase - 0.025,
+                                0,
+                                0,
+                                xBase + 0.022,
+                                0,
+                                0,
+                                xBase - 0.022,
+                                0,
+                                0,
+                                xBase + 0.018,
+                                0,
+                                0,
+                                xBase - 0.018,
+                                0,
+                                0,
+                                xBase + 0.008,
+                                0,
+                                0,
+                                xBase - 0.008,
+                                0,
+                                0,
+                                xBase,
+                                0,
+                                0,
+                            ]
+                        )
+                    );
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 0.12, 0.25, 0.4, 0.7],
+                            [
+                                ...qFromEuler(-0.06, 0, 0),
+                                ...qFromEuler(-0.08, 0.04, 0),
+                                ...qFromEuler(-0.06, 0, 0),
+                                ...qFromEuler(-0.04, 0, 0),
+                                ...qFromEuler(0, 0, 0),
+                            ]
+                        )
+                    );
+                } else if (emotion === "anxious") {
+                    // Nervous quick bob + micro rotations
+                    duration = 0.9;
+                    const yBase = root.position.y || 0;
+                    tracks.push(
+                        new THREE.VectorKeyframeTrack(
+                            ".position",
+                            [0, 0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 0.9],
+                            [
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.012,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.012,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase + 0.008,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                                0,
+                                yBase,
+                                0,
+                            ]
+                        )
+                    );
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 0.2, 0.45, 0.65, 0.9],
+                            [
+                                ...qFromEuler(0, 0, 0.02),
+                                ...qFromEuler(0, 0, -0.02),
+                                ...qFromEuler(0, 0, 0.015),
+                                ...qFromEuler(0, 0, -0.015),
+                                ...qFromEuler(0, 0, 0),
+                            ]
+                        )
+                    );
+                } else if (emotion === "confused") {
+                    // Head tilt left–right slow
+                    duration = 2.5;
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 0.7, 1.4, 2.0, 2.5],
+                            [
+                                ...qFromEuler(0, 0, 0),
+                                ...qFromEuler(0, 0, 0.12),
+                                ...qFromEuler(0, 0, -0.08),
+                                ...qFromEuler(0, 0, 0.06),
+                                ...qFromEuler(0, 0, 0),
+                            ]
+                        )
+                    );
+                } else if (emotion === "thinking") {
+                    // Slight lean back, subtle side sway
+                    duration = 3;
+                    tracks.push(
+                        new THREE.QuaternionKeyframeTrack(
+                            ".quaternion",
+                            [0, 1, 2, 3],
+                            [
+                                ...qFromEuler(-0.03, 0.06, 0),
+                                ...qFromEuler(-0.05, 0, 0),
+                                ...qFromEuler(-0.03, -0.06, 0),
+                                ...qFromEuler(-0.03, 0.06, 0),
+                            ]
+                        )
+                    );
+                }
+
+                const clip = new THREE.AnimationClip(emotion, duration, tracks);
+                const action = mixer.clipAction(clip);
+                action.setLoop(
+                    ["idle", "talking", "anxious", "thinking"].includes(emotion)
+                        ? THREE.LoopRepeat
+                        : THREE.LoopPingPong,
+                    Infinity
+                );
+                return action;
+            }
+
+            function qFromEuler(x, y, z) {
+                const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z));
+                return [q.x, q.y, q.z, q.w];
+            }
+
+            // ══════════════════════════════════════════════════════════════════
+            //  ANIMATION CONTROLLER
+            // ══════════════════════════════════════════════════════════════════
+
+            const EMOTION_CONFIG = {
+                neutral: { clip: "idle", color: 0x00e5ff, particleColor: 0x00e5ff, rimColor: 0x7c3aed, intensity: 1.2 },
+                happy: { clip: "happy", color: 0xfacc15, particleColor: 0xfde047, rimColor: 0xf59e0b, intensity: 1.8 },
+                sad: { clip: "sad", color: 0x60a5fa, particleColor: 0x93c5fd, rimColor: 0x3b82f6, intensity: 0.7 },
+                angry: { clip: "angry", color: 0xf87171, particleColor: 0xff6060, rimColor: 0xef4444, intensity: 2.0 },
+                anxious: {
+                    clip: "anxious",
+                    color: 0xa78bfa,
+                    particleColor: 0xc4b5fd,
+                    rimColor: 0x8b5cf6,
+                    intensity: 1.4,
+                },
+                confused: {
+                    clip: "confused",
+                    color: 0xfb923c,
+                    particleColor: 0xfdba74,
+                    rimColor: 0xf97316,
+                    intensity: 1.3,
+                },
+            };
+
+            let currentEmotion = "neutral";
+            let isTalking = false;
+            let talkTimer = null;
+            const TALK_DURATION = 3500; // default fallback — overridden dynamically per reply
+
+            function playClip(name, crossFadeDuration = 0.5) {
+                const next = clips[name];
+                if (!next) return;
+                if (activeAction === next) return;
+
+                if (activeAction) {
+                    activeAction.crossFadeTo(next, crossFadeDuration, true);
+                }
+                next.reset().play();
+                activeAction = next;
+            }
+
+            function setEmotion(emotion) {
+                currentEmotion = emotion;
+                const cfg = EMOTION_CONFIG[emotion] || EMOTION_CONFIG.neutral;
+
+                // Update lighting
+                emoLight.color.setHex(cfg.color);
+                emoLight.intensity = cfg.intensity;
+
+                // Update particles
+                partMat.color.setHex(cfg.particleColor);
+
+                // Update rim light
+                rimLight.color.setHex(cfg.rimColor);
+
+                // Update glow ring
+                glowMat.color.setHex(cfg.color);
+
+                // Update UI
+                const viewport = document.getElementById("viewport");
+                viewport.dataset.emotion = emotion;
+                document.getElementById("emotion-badge").style.borderColor =
+                    "#" + cfg.color.toString(16).padStart(6, "0");
+
+                const ICONS = { neutral: "⚡", happy: "✨", sad: "💧", angry: "🔥", anxious: "💫", confused: "❓" };
+                document.getElementById("emotion-icon").textContent = ICONS[emotion] || "⚡";
+                document.getElementById("emotion-label").textContent = emotion.toUpperCase();
+                document.getElementById("s-emotion").textContent = emotion;
+            }
+
+            /** Called when Phoenix starts replying.
+             *  @param {string} emotion
+             *  @param {number} [durationMs] — if provided, avatar stays in talk mode
+             *    for this long (synced to TTS speech length). Falls back to TALK_DURATION.
+             */
+            function startTalking(emotion, durationMs) {
+                setEmotion(emotion);
+
+                const talkDuration = durationMs && durationMs > 500 ? durationMs + 600 : TALK_DURATION;
+
+                // Play emotion clip first, then switch to talking
+                const emotionClip = emotion !== "neutral" ? emotion : "talking";
+                playClip(emotionClip, 0.3);
+
+                setTimeout(() => {
+                    if (!isTalking) return;
+                    playClip("talking", 0.4);
+                }, 800);
+
+                isTalking = true;
+                clearTimeout(talkTimer);
+                talkTimer = setTimeout(() => {
+                    isTalking = false;
+                    playClip("idle", 0.6);
+                }, talkDuration);
+            }
+
+            /** Called when the user is typing */
+            function startThinking() {
+                if (!isTalking) playClip("thinking", 0.5);
+            }
+
+            function stopThinking() {
+                if (!isTalking) playClip("idle", 0.5);
+            }
+
+            // ══════════════════════════════════════════════════════════════════
+            //  RENDER LOOP
+            // ══════════════════════════════════════════════════════════════════
+
+            const clock = new THREE.Clock();
+            let tAnim = 0;
+
+            function resize() {
+                const vp = document.getElementById("viewport");
+                const w = vp.clientWidth;
+                const h = vp.clientHeight;
+                renderer.setSize(w, h, false);
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+            }
+            resize();
+            new ResizeObserver(resize).observe(document.getElementById("viewport"));
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const delta = clock.getDelta();
+
+                controls.update();
+
+                if (mixer) {
+                    mixer.update(delta);
+                }
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // ══════════════════════════════════════════════════════════════════
+            //  CHAT LOGIC
+            // ══════════════════════════════════════════════════════════════════
+
+            let turnCount = 0;
+            let learnCount = 0;
+            let typingTimer = null;
+
+            const messagesEl = document.getElementById("messages");
+            const inputEl = document.getElementById("user-input");
+            const sendBtn = document.getElementById("send-btn");
+            const typingEl = document.getElementById("typing");
+
+            let recognition = null;
+            let isVoiceListening = false;
+            const voiceStatusEl = document.getElementById("voice-status");
+            const voiceListenBtn = document.getElementById("voice-listen-btn");
+            const speakTestBtn = document.getElementById("speak-test-btn");
+
+            function setVoiceStatus(message) {
+                if (voiceStatusEl) {
+                    voiceStatusEl.textContent = message;
+                }
+            }
+
+            function updateVoiceButton() {
+                if (!voiceListenBtn) return;
+                voiceListenBtn.textContent = isVoiceListening ? "Stop Listening" : "Start Listening";
+            }
+
+            function initVoiceInput() {
+                recognition = createSpeechRecognition(
+                    async (transcript) => {
+                        isVoiceListening = false;
+                        updateVoiceButton();
+                        setVoiceStatus(`Heard: "${transcript}"`);
+                        if (!transcript) return;
+                        await sendVoiceMessage(transcript);
+                    },
+                    (state) => {
+                        if (state === "idle") {
+                            isVoiceListening = false;
+                            updateVoiceButton();
+                            setVoiceStatus("Say something to Phoenix.");
+                            return;
+                        }
+                        if (state.startsWith("error:")) {
+                            setVoiceStatus(state.replace("error:", "Voice error: "));
+                            isVoiceListening = false;
+                            updateVoiceButton();
+                            return;
+                        }
+                        setVoiceStatus(state.charAt(0).toUpperCase() + state.slice(1));
+                    }
+                );
+                if (!recognition) {
+                    if (voiceListenBtn) {
+                        voiceListenBtn.disabled = true;
+                    }
+                    setVoiceStatus("Voice input unavailable in this browser.");
+                }
+            }
+
+            async function sendVoiceMessage(text) {
+                if (!text) return;
+                turnCount++;
+                appendMessage("user", text);
+                showTyping();
+                startThinking();
+                try {
+                    const res = await fetch("/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: text, allow_loosened: true }),
+                    });
+                    const data = await res.json();
+                    hideTyping();
+                    if (data.error) {
+                        appendMessage("bot", `⚠ ${data.error}`);
+                        stopThinking();
+                    } else {
+                        const emotion = data.emotion || "neutral";
+                        if (data.learned) learnCount++;
+                        startTalking(emotion);
+                        const estDurationMs = speakReply(data.reply, emotion);
+                        startTalking(emotion, estDurationMs);
+                        appendMessage("bot", data.reply);
+                        updateStats(data);
+                        if (data.new_facts && Object.keys(data.new_facts).length > 0) {
+                            const factStr = Object.entries(data.new_facts)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(", ");
+                            appendMessage("bot", `📎 Remembered — ${factStr}`);
+                        }
+                    }
+                } catch (err) {
+                    hideTyping();
+                    stopThinking();
+                    appendMessage("bot", "⚠ Connection error. Is the server running?");
+                }
+            }
+
+            function scrollToBottom() {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+
+            function appendMessage(role, text, meta = "") {
+                // Remove typing indicator before appending
+                typingEl.classList.remove("show");
+                messagesEl.insertBefore(typingEl.parentNode === messagesEl ? typingEl : typingEl, null);
+
+                const wrap = document.createElement("div");
+                wrap.className = `msg ${role}`;
+                wrap.innerHTML = `
     <div class="bubble">${escHtml(text)}</div>
-    <div class="msg-meta">${meta || (role === 'user' ? 'YOU' : 'PHOENIX')} // ${timestamp()}</div>
+    <div class="msg-meta">${meta || (role === "user" ? "YOU" : "PHOENIX")} // ${timestamp()}</div>
   `;
-  messagesEl.insertBefore(wrap, typingEl);
-  scrollToBottom();
-}
-
-function showTyping() {
-  typingEl.classList.add('show');
-  messagesEl.appendChild(typingEl);
-  scrollToBottom();
-}
-
-function hideTyping() {
-  typingEl.classList.remove('show');
-}
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function timestamp() {
-  return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-}
-
-function updateStats(result) {
-  document.getElementById('s-turns').textContent   = turnCount;
-  document.getElementById('s-learned').textContent = learnCount;
-  if (result) {
-    document.getElementById('s-score').textContent =
-      result.score >= 0 ? result.score.toFixed(2) : '—';
-  }
-}
-
-async function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text) return;
-
-  inputEl.value   = '';
-  inputEl.style.height = '';
-  sendBtn.disabled = true;
-
-  turnCount++;
-  appendMessage('user', text);
-  showTyping();
-  startThinking();
-
-  try {
-    const res  = await fetch('/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text }),
-    });
-    const data = await res.json();
-    hideTyping();
-
-    if (data.error) {
-      appendMessage('bot', `⚠ ${data.error}`);
-      stopThinking();
-    } else {
-      const emotion = data.emotion || 'neutral';
-      if (data.learned) learnCount++;
-
-      // Trigger avatar behaviour
-      startTalking(emotion);
-
-      appendMessage('bot', data.reply);
-      updateStats(data);
-
-      // Fact learned toast
-      if (data.new_facts && Object.keys(data.new_facts).length > 0) {
-        const factStr = Object.entries(data.new_facts)
-          .map(([k,v]) => `${k}: ${v}`).join(', ');
-        appendMessage('bot', `📎 Remembered — ${factStr}`);
-      }
-    }
-  } catch (err) {
-    hideTyping();
-    stopThinking();
-    appendMessage('bot', '⚠ Connection error. Is the server running?');
-  }
-
-  sendBtn.disabled = false;
-  inputEl.focus();
-}
-
-// ── Input events ──────────────────────────────────────────────────
-sendBtn.addEventListener('click', sendMessage);
-
-inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-
-  if (voiceListenBtn) {
-    voiceListenBtn.addEventListener('click', () => {
-      if (!recognition) return;
-      if (isVoiceListening) {
-        recognition.stop();
-        isVoiceListening = false;
-        updateVoiceButton();
-        setVoiceStatus('Stopping voice input...');
-      } else {
-        try {
-          recognition.start();
-          isVoiceListening = true;
-          updateVoiceButton();
-          setVoiceStatus('Listening...');
-        } catch (err) {
-          setVoiceStatus('Voice start failed.');
-          console.error('SpeechRecognition start error', err);
-        }
-      }
-    });
-  }
-
-  if (speakTestBtn) {
-    speakTestBtn.addEventListener('click', () => speakReply('Hello! I am Phoenix, your AI companion. How can I help you today?', 'neutral'));
-  }
-  initVoiceInput();
-
-// Auto-resize textarea
-inputEl.addEventListener('input', () => {
-  inputEl.style.height = '';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
-});
-
-// Typing detection — shows "thinking" animation on model
-inputEl.addEventListener('input', () => {
-  clearTimeout(typingTimer);
-  if (inputEl.value.trim()) startThinking();
-  typingTimer = setTimeout(() => {
-    if (!isTalking) stopThinking();
-  }, 1800);
-});
-
-// ── Session meta ──────────────────────────────────────────────────
-(async () => {
-  try {
-    const r = await fetch('/status');
-    const d = await r.json();
-    if (d.session_id) {
-      document.getElementById('session-meta').textContent =
-        'SESSION // ' + d.session_id.slice(-6).toUpperCase();
-    }
-  } catch {}
-})();
-
-
-
-// ══════════════════════════════════════════════════════════════════
-//  PHOENIX VOICE PRE-PROCESSOR
-//  Transforms raw text replies into natural spoken speech:
-//    - Injects breathing pauses via SSML-like comma spacing
-//    - Strips markdown symbols and emojis that TTS reads aloud
-//    - Estimates speech duration to sync avatar animation
-// ══════════════════════════════════════════════════════════════════
-
-/**
- * Estimate how long the browser TTS will take to speak `text` in ms.
- * Uses words-per-minute based on the current rate slider.
- */
-function estimateSpeechDurationMs(text, rate) {
-  const words = text.trim().split(/\s+/).length;
-  const wpm   = 150 * (rate || 1.0);   // average speaking rate * TTS rate
-  return Math.round((words / wpm) * 60 * 1000);
-}
-
-/**
- * Pre-process a raw bot reply into natural spoken text:
- *   1. Strip emojis and markdown
- *   2. Add natural pauses after sentence-ending punctuation
- *   3. Expand common abbreviations for correct TTS pronunciation
- *   4. Ensure contractions sound natural (don't → "don't", etc.)
- */
-function prepareForSpeech(raw) {
-  let t = raw;
-
-  // Strip emojis (Unicode ranges)
-  t = t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '');
-
-  // Strip markdown bold/italic (* ** _)
-  t = t.replace(/[*_~`#]/g, '');
-
-  // Strip URLs
-  t = t.replace(/https?:\/\/\S+/g, '');
-
-  // Trim "📎 Remembered —" prefix if somehow included
-  t = t.replace(/^📎.*?—\s*/u, '');
-
-  // Strip leftover special punctuation
-  t = t.replace(/[→←↑↓►▶◀◄]/g, '');
-
-  // Expand common abbreviations
-  const abbr = {
-    "AI": "A I",
-    "LSTM": "L S T M",
-    "GPT": "G P T",
-    "btw": "by the way",
-    "tbh": "to be honest",
-    "idk": "I don't know",
-    "imo": "in my opinion",
-    "lol": "ha",
-    "omg": "oh my",
-    "ngl": "not gonna lie",
-    "irl": "in real life",
-    "rn": "right now",
-    "smh": "shaking my head",
-  };
-  for (const [from, to] of Object.entries(abbr)) {
-    t = t.replace(new RegExp(`\\b${from}\\b`, 'gi'), to);
-  }
-
-  // Add slight breathing pause (comma) after sentence breaks if missing
-  // e.g. "Hello. How are you?" → "Hello,  How are you?"
-  t = t.replace(/([.!?])\s+([A-Z])/g, '$1, $2');
-
-  // Remove double spaces
-  t = t.replace(/\s{2,}/g, ' ').trim();
-
-  return t;
-}
-
-/**
- * Speak a bot reply with the full Phoenix personality:
- *   - Pre-processes text for natural speech
- *   - Estimates duration to sync avatar talk animation
- *   - Applies emotion-based rate/pitch modulation
- * Returns the estimated duration in ms (or 0 if TTS disabled).
- */
-function speakReply(rawText, emotion) {
-  if (!synth) return 0;
-  if (!document.getElementById('auto-speak-toggle').checked) return 0;
-
-  synth.cancel();
-
-  const clean = prepareForSpeech(rawText);
-  if (!clean) return 0;
-
-  const rate  = parseFloat(document.getElementById('rate-slider').value);
-  const estMs = estimateSpeechDurationMs(clean, rate);
-
-  const utt   = new SpeechSynthesisUtterance(clean);
-  utt.voice   = selectedVoice || null;
-  utt.volume  = parseFloat(document.getElementById('vol-slider').value);
-  utt.rate    = rate;
-  utt.pitch   = parseFloat(document.getElementById('pitch-slider').value);
-
-  // Emotion modulation
-  const emotionMod = {
-    happy:   { rateDelta: +0.12, pitchDelta: +0.08 },
-    sad:     { rateDelta: -0.12, pitchDelta: -0.10 },
-    angry:   { rateDelta: +0.08, pitchDelta: +0.04 },
-    anxious: { rateDelta: +0.06, pitchDelta: +0.04 },
-    confused:{ rateDelta: -0.04, pitchDelta:  0    },
-    neutral: { rateDelta:  0,    pitchDelta:  0    },
-  };
-  const mod = emotionMod[emotion] || emotionMod.neutral;
-  utt.rate  = Math.max(0.5, Math.min(2.0, utt.rate  + mod.rateDelta));
-  utt.pitch = Math.max(0.5, Math.min(2.0, utt.pitch + mod.pitchDelta));
-
-  utt.onstart = () => {
-    isSpeaking = true;
-    document.getElementById('speaking-badge').classList.add('show');
-    startMouthRhythm();
-  };
-
-  utt.onend = utt.onerror = () => {
-    isSpeaking = false;
-    document.getElementById('speaking-badge').classList.remove('show');
-    stopMouthRhythm();
-    // Return avatar to idle once speech ends
-    if (!isTalking) playClip('idle', 0.8);
-  };
-
-  setTimeout(() => synth.speak(utt), 80);
-  return estMs;
-}
-
-// ══════════════════════════════════════════════════════════════════
-//  VOICE ENGINE  (Web Speech API — SpeechSynthesis)
-// ══════════════════════════════════════════════════════════════════
-
-const synth         = window.speechSynthesis;
-let   voiceList     = [];
-let   selectedVoice = null;
-let   isSpeaking    = false;
-
-// ── Jaw animation state ────────────────────────────────────────────
-// We find jaw/mouth bones by name and drive them during speech.
-let jawBone       = null;   // THREE.Bone or null
-let jawOpenTarget = 0;      // 0 = closed, 1 = fully open
-let jawCurrent    = 0;
-const JAW_SPEED   = 8;      // lerp speed per second
-const JAW_NAMES   = ['jaw','Jaw','mouth','Mouth','chin','Chin','lower_jaw','lowerJaw'];
-
-function findJawBone(root) {
-  let found = null;
-  root.traverse(obj => {
-    if (found) return;
-    if ((obj.isBone || obj.type === 'Bone') &&
-        JAW_NAMES.some(n => obj.name.toLowerCase().includes(n.toLowerCase()))) {
-      found = obj;
-    }
-  });
-  return found;
-}
-
-// Called after avatar loads
-function initJaw() {
-  if (!avatar) return;
-  jawBone = findJawBone(avatar);
-  if (jawBone) console.log('✅ Jaw bone found:', jawBone.name);
-  else         console.log('ℹ️  No jaw bone — using head nod for speech');
-}
-
-// Update jaw in render loop (called from animate())
-function updateJaw(dt) {
-  if (!avatar) return;
-
-  // Lerp jaw toward target
-  jawCurrent += (jawOpenTarget - jawCurrent) * Math.min(1, JAW_SPEED * dt);
-
-  if (jawBone) {
-    // Rotate jaw bone on X axis (open/close)
-    jawBone.rotation.x = jawCurrent * 0.35;
-  } else if (isSpeaking && avatar.rotation !== undefined) {
-    // Fallback: subtle head nod rhythm driven by sin wave
-    // (avatar root Y rotation oscillates slightly while speaking)
-    avatar.rotation.y = Math.sin(Date.now() * 0.008) * 0.04;
-  }
-}
-
-// ── Mouth open/close rhythm while speaking ─────────────────────────
-let mouthRhythmTimer = null;
-
-function startMouthRhythm() {
-  if (mouthRhythmTimer) return;
-  let phase = 0;
-  mouthRhythmTimer = setInterval(() => {
-    // Oscillate open/close: half-wave sine so it opens & closes naturally
-    phase += 0.38;
-    jawOpenTarget = Math.max(0, Math.sin(phase)) * 0.9;
-  }, 80);
-}
-
-function stopMouthRhythm() {
-  if (mouthRhythmTimer) { clearInterval(mouthRhythmTimer); mouthRhythmTimer = null; }
-  jawOpenTarget = 0;
-}
-
-// ── Voice population ───────────────────────────────────────────────
-function populateVoices() {
-  voiceList = synth.getVoices();
-  const sel = document.getElementById('voice-select');
-  sel.innerHTML = '';
-
-  // Group: english first, then others
-  const en    = voiceList.filter(v => v.lang.startsWith('en'));
-  const other = voiceList.filter(v => !v.lang.startsWith('en'));
-  const sorted = [...en, ...other];
-
-  if (sorted.length === 0) {
-    sel.innerHTML = '<option value="">No voices available</option>';
-    return;
-  }
-
-  sorted.forEach((v, i) => {
-    const opt = document.createElement('option');
-    opt.value    = i;   // use index into sorted array
-    opt.textContent = `${v.name} (${v.lang})${v.localService ? ' 📴' : ' 🌐'}`;
-    sel.appendChild(opt);
-  });
-
-  // Pick a decent default: prefer a deep/robotic-sounding English voice
-  const preferred = ['Google UK English Male','Microsoft David','Alex','Daniel','en-GB'];
-  let defaultIdx = 0;
-  for (const pref of preferred) {
-    const idx = sorted.findIndex(v => v.name.includes(pref) || v.lang === pref);
-    if (idx !== -1) { defaultIdx = idx; break; }
-  }
-  sel.value    = defaultIdx;
-  selectedVoice = sorted[defaultIdx];
-
-  // Store sorted list for later lookups
-  sel._voiceSorted = sorted;
-}
-
-// Voices load async
-synth.onvoiceschanged = populateVoices;
-populateVoices();
-
-document.getElementById('voice-select').addEventListener('change', function() {
-  const sorted = this._voiceSorted || voiceList;
-  selectedVoice = sorted[parseInt(this.value)] || null;
-});
-
-// ── Slider helpers ────────────────────────────────────────────────
-function linkSlider(sliderId, valId) {
-  const slider = document.getElementById(sliderId);
-  const valEl  = document.getElementById(valId);
-  slider.addEventListener('input', () => {
-    valEl.textContent = parseFloat(slider.value).toFixed(1);
-  });
-}
-linkSlider('vol-slider',   'vol-val');
-linkSlider('rate-slider',  'rate-val');
-linkSlider('pitch-slider', 'pitch-val');
-
-// ── Core speak function ────────────────────────────────────────────
-function speakText(text, emotion) {
-  if (!synth) return;
-  if (!document.getElementById('auto-speak-toggle').checked) return;
-
-  // Cancel anything already speaking
-  synth.cancel();
-
-  // Strip emoji / special chars that TTS reads out loud
-  const clean = text
-    .replace(/[⚡✨💧🔥💫❓📎🤗😌😊😄🤔]/g, '')
-    .replace(/[^\w\s',.!?-]/g, ' ')
-    .trim();
-  if (!clean) return;
-
-  const utt   = new SpeechSynthesisUtterance(clean);
-  utt.voice   = selectedVoice || null;
-  utt.volume  = parseFloat(document.getElementById('vol-slider').value);
-  utt.rate    = parseFloat(document.getElementById('rate-slider').value);
-  utt.pitch   = parseFloat(document.getElementById('pitch-slider').value);
-
-  // Slightly adjust rate/pitch by emotion
-  const emotionMod = {
-    happy:   { rateDelta: +0.15, pitchDelta: +0.1 },
-    sad:     { rateDelta: -0.15, pitchDelta: -0.1 },
-    angry:   { rateDelta: +0.1,  pitchDelta: +0.05 },
-    anxious: { rateDelta: +0.08, pitchDelta: +0.05 },
-    confused:{ rateDelta: -0.05, pitchDelta:  0    },
-    neutral: { rateDelta:  0,    pitchDelta:  0    },
-  };
-  const mod = emotionMod[emotion] || emotionMod.neutral;
-  utt.rate  = Math.max(0.5, Math.min(2.0, utt.rate  + mod.rateDelta));
-  utt.pitch = Math.max(0.5, Math.min(2.0, utt.pitch + mod.pitchDelta));
-
-  utt.onstart = () => {
-    isSpeaking = true;
-    document.getElementById('speaking-badge').classList.add('show');
-    startMouthRhythm();
-  };
-
-  utt.onend = utt.onerror = () => {
-    isSpeaking = false;
-    document.getElementById('speaking-badge').classList.remove('show');
-    stopMouthRhythm();
-  };
-
-  // Small delay so TTS fires after UI update
-  setTimeout(() => synth.speak(utt), 80);
-}
-
-function speakTest() {
-  speakReply("Hello! I am Phoenix, your AI companion. How can I help you today?", 'neutral');
-}
-
-// ── Voice panel collapse toggle ────────────────────────────────────
-function toggleVoicePanel() {
-  const body    = document.getElementById('voice-body');
-  const chevron = document.getElementById('voice-chevron');
-  const isOpen  = !body.classList.contains('collapsed');
-  body.classList.toggle('collapsed', isOpen);
-  chevron.classList.toggle('open', !isOpen);
-}
-
-
-// ══════════════════════════════════════════════════════════════════
-//  GAZE TRACKING — avatar "looks at" mouse cursor
-// ══════════════════════════════════════════════════════════════════
-
-// We track normalised mouse position relative to the viewport,
-// then use it to nudge the camera target slightly, giving the
-// impression the avatar is following the user's gaze.
-
-let mouseNorm = { x: 0, y: 0 };   // -1..1
-let gazeTarget = new THREE.Vector3(0, 1.2, 0);  // where camera looks
-const GAZE_STRENGTH = 0.18;   // how much the avatar "turns" (world units)
-const GAZE_LERP     = 3.5;    // lerp speed
-
-// Head bone gaze (if available)
-let headBone = null;
-const HEAD_NAMES = ['head','Head','HEAD','neck','Neck'];
-
-function findHeadBone(root) {
-  let found = null;
-  root.traverse(obj => {
-    if (found) return;
-    if ((obj.isBone || obj.type === 'Bone') &&
-        HEAD_NAMES.some(n => obj.name.toLowerCase().includes(n.toLowerCase()))) {
-      found = obj;
-    }
-  });
-  return found;
-}
-
-function initGaze() {
-  if (!avatar) return;
-  headBone = findHeadBone(avatar);
-  if (headBone) console.log('✅ Head bone found:', headBone.name);
-}
-
-// Track mouse over the ENTIRE page (not just viewport)
-document.addEventListener('mousemove', e => {
-  const vp   = document.getElementById('viewport');
-  const rect = vp.getBoundingClientRect();
-  // Normalise to -1..1 within viewport bounds, clamp
-  mouseNorm.x = Math.max(-1, Math.min(1, ((e.clientX - rect.left) / rect.width  - 0.5) * 2));
-  mouseNorm.y = Math.max(-1, Math.min(1, ((e.clientY - rect.top)  / rect.height - 0.5) * 2));
-});
-
-// Touch support (mobile)
-document.addEventListener('touchmove', e => {
-  if (!e.touches.length) return;
-  const vp   = document.getElementById('viewport');
-  const rect = vp.getBoundingClientRect();
-  mouseNorm.x = Math.max(-1, Math.min(1, ((e.touches[0].clientX - rect.left) / rect.width  - 0.5) * 2));
-  mouseNorm.y = Math.max(-1, Math.min(1, ((e.touches[0].clientY - rect.top)  / rect.height - 0.5) * 2));
-}, { passive: true });
-
-function updateGaze(dt) {
-  // Target: base look-at + gaze offset from mouse
-  const targetX = mouseNorm.x *  GAZE_STRENGTH;
-  const targetY = 1.2 + mouseNorm.y * -GAZE_STRENGTH * 0.6;
-
-  gazeTarget.x += (targetX - gazeTarget.x) * Math.min(1, GAZE_LERP * dt);
-  gazeTarget.y += (targetY - gazeTarget.y) * Math.min(1, GAZE_LERP * dt);
-
-  // Drive head bone if available (subtle Y/X rotation)
-  if (headBone) {
-    const targetRotY = mouseNorm.x *  0.20;
-    const targetRotX = mouseNorm.y * -0.12;
-    headBone.rotation.y += (targetRotY - headBone.rotation.y) * Math.min(1, GAZE_LERP * dt);
-    headBone.rotation.x += (targetRotX - headBone.rotation.x) * Math.min(1, GAZE_LERP * dt);
-  } else if (!controls.active) {
-    // Fallback: nudge OrbitControls target
-    controls.target.x += (gazeTarget.x - controls.target.x) * Math.min(1, 2 * dt);
-    controls.target.y += (gazeTarget.y - controls.target.y) * Math.min(1, 2 * dt);
-  }
-}
-
-
-// ══════════════════════════════════════════════════════════════════
-//  PATCH: hook into existing systems after model loads
-// ══════════════════════════════════════════════════════════════════
-
-// Monkey-patch the existing loader success callback by wrapping
-// the original "loadingEl.classList.add('hidden')" — we wait for
-// avatar to be set (polled), then init gaze + jaw.
-
-(function waitForAvatar() {
-  const interval = setInterval(() => {
-    if (avatar) {
-      clearInterval(interval);
-      initJaw();
-      initGaze();
-      console.log('✅ Gaze + Jaw initialised');
-    }
-  }, 200);
-})();
-
-// ── Patch animate() to call updateJaw + updateGaze ────────────────
-// We override the existing animate function by hooking into the
-// RAF loop via a secondary requestAnimationFrame chain that reads
-// the same clock delta.
-
-const _jawGazeClock = new THREE.Clock();
-(function jawGazeLoop() {
-  requestAnimationFrame(jawGazeLoop);
-  const dt = _jawGazeClock.getDelta();
-  updateJaw(dt);
-  updateGaze(dt);
-})();
-
-
-// ── Patch sendMessage to call speakText after reply ───────────────
-// We wrap the existing sendMessage to intercept the bot reply
-// and call speakText without duplicating the fetch logic.
-
-const _origSendMessage = sendMessage;
-window._phoenixVoicePatch = true;
-
-// Override the bot message append to speak it
-const _origAppendMessage = appendMessage;
-window._lastBotEmotion = 'neutral';
-
-// We intercept at the chat level: after fetch resolves with data,
-// startTalking already fires → we also call speakText there.
-// Simplest: wrap the existing sendMessage async function.
-
-(function patchSendMessage() {
-  // Replace sendMessage with a patched version
-  window.sendMessage = async function() {
-    const text = document.getElementById('user-input').value.trim();
-    if (!text) return;
-
-    document.getElementById('user-input').value   = '';
-    document.getElementById('user-input').style.height = '';
-    document.getElementById('send-btn').disabled = true;
-
-    turnCount++;
-    appendMessage('user', text);
-    showTyping();
-    startThinking();
-
-    try {
-      const res  = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
-      });
-      const data = await res.json();
-      hideTyping();
-
-      if (data.error) {
-        appendMessage('bot', `⚠ ${data.error}`);
-        stopThinking();
-      } else {
-        const emotion = data.emotion || 'neutral';
-        if (data.learned) learnCount++;
-
-        // Trigger avatar behaviour
-        startTalking(emotion);
-
-        // ✅ SPEAK with full personality pre-processor + duration-synced animation
-        const estDurationMs = speakReply(data.reply, emotion);
-
-        // Re-trigger startTalking with the speech duration so avatar
-        // keeps talking for exactly as long as Phoenix is speaking
-        startTalking(emotion, estDurationMs);
-
-        appendMessage('bot', data.reply);
-        updateStats(data);
-
-        if (data.new_facts && Object.keys(data.new_facts).length > 0) {
-          const factStr = Object.entries(data.new_facts)
-            .map(([k,v]) => `${k}: ${v}`).join(', ');
-          appendMessage('bot', `📎 Remembered — ${factStr}`);
-        }
-      }
-    } catch (err) {
-      hideTyping();
-      stopThinking();
-      appendMessage('bot', '⚠ Connection error. Is the server running?');
-    }
-
-    document.getElementById('send-btn').disabled = false;
-    document.getElementById('user-input').focus();
-  };
-
-  // Re-bind button and Enter key to the patched version
-  document.getElementById('send-btn').onclick = null;
-  document.getElementById('send-btn').addEventListener('click', () => window.sendMessage());
-  document.getElementById('user-input').removeEventListener('keydown', null);
-  document.getElementById('user-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
-  });
-})();
-
-// ── Stop speech when tab is hidden / page closes ──────────────────
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) synth.cancel();
-});
-window.addEventListener('beforeunload', () => synth.cancel());
-
-</script>
-</body>
+                messagesEl.insertBefore(wrap, typingEl);
+                scrollToBottom();
+            }
+
+            function showTyping() {
+                typingEl.classList.add("show");
+                messagesEl.appendChild(typingEl);
+                scrollToBottom();
+            }
+
+            function hideTyping() {
+                typingEl.classList.remove("show");
+            }
+
+            function escHtml(str) {
+                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            }
+
+            function timestamp() {
+                return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            }
+
+            function updateStats(result) {
+                document.getElementById("s-turns").textContent = turnCount;
+                document.getElementById("s-learned").textContent = learnCount;
+                if (result) {
+                    document.getElementById("s-score").textContent = result.score >= 0 ? result.score.toFixed(2) : "—";
+                }
+            }
+
+            async function sendMessage() {
+                const text = inputEl.value.trim();
+                if (!text) return;
+
+                inputEl.value = "";
+                inputEl.style.height = "";
+                sendBtn.disabled = true;
+
+                turnCount++;
+                appendMessage("user", text);
+                showTyping();
+                startThinking();
+
+                try {
+                    const res = await fetch("/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: text }),
+                    });
+                    const data = await res.json();
+                    hideTyping();
+
+                    if (data.error) {
+                        appendMessage("bot", `⚠ ${data.error}`);
+                        stopThinking();
+                    } else {
+                        const emotion = data.emotion || "neutral";
+                        if (data.learned) learnCount++;
+
+                        // Trigger avatar behaviour
+                        startTalking(emotion);
+
+                        appendMessage("bot", data.reply);
+                        updateStats(data);
+
+                        // Fact learned toast
+                        if (data.new_facts && Object.keys(data.new_facts).length > 0) {
+                            const factStr = Object.entries(data.new_facts)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(", ");
+                            appendMessage("bot", `📎 Remembered — ${factStr}`);
+                        }
+                    }
+                } catch (err) {
+                    hideTyping();
+                    stopThinking();
+                    appendMessage("bot", "⚠ Connection error. Is the server running?");
+                }
+
+                sendBtn.disabled = false;
+                inputEl.focus();
+            }
+
+            // ── Input events ──────────────────────────────────────────────────
+            sendBtn.addEventListener("click", sendMessage);
+
+            inputEl.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            if (voiceListenBtn) {
+                voiceListenBtn.addEventListener("click", () => {
+                    if (!recognition) return;
+                    if (isVoiceListening) {
+                        recognition.stop();
+                        isVoiceListening = false;
+                        updateVoiceButton();
+                        setVoiceStatus("Stopping voice input...");
+                    } else {
+                        try {
+                            recognition.start();
+                            isVoiceListening = true;
+                            updateVoiceButton();
+                            setVoiceStatus("Listening...");
+                        } catch (err) {
+                            setVoiceStatus("Voice start failed.");
+                            console.error("SpeechRecognition start error", err);
+                        }
+                    }
+                });
+            }
+
+            if (speakTestBtn) {
+                speakTestBtn.addEventListener("click", () =>
+                    speakReply("Hello! I am Phoenix, your AI companion. How can I help you today?", "neutral")
+                );
+            }
+            initVoiceInput();
+
+            // Auto-resize textarea
+            inputEl.addEventListener("input", () => {
+                inputEl.style.height = "";
+                inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+            });
+
+            // Typing detection — shows "thinking" animation on model
+            inputEl.addEventListener("input", () => {
+                clearTimeout(typingTimer);
+                if (inputEl.value.trim()) startThinking();
+                typingTimer = setTimeout(() => {
+                    if (!isTalking) stopThinking();
+                }, 1800);
+            });
+
+            // ── Session meta ──────────────────────────────────────────────────
+            (async () => {
+                try {
+                    const r = await fetch("/status");
+                    const d = await r.json();
+                    if (d.session_id) {
+                        document.getElementById("session-meta").textContent =
+                            "SESSION // " + d.session_id.slice(-6).toUpperCase();
+                    }
+                } catch {}
+            })();
+
+            // ══════════════════════════════════════════════════════════════════
+            //  PHOENIX VOICE PRE-PROCESSOR
+            //  Transforms raw text replies into natural spoken speech:
+            //    - Injects breathing pauses via SSML-like comma spacing
+            //    - Strips markdown symbols and emojis that TTS reads aloud
+            //    - Estimates speech duration to sync avatar animation
+            // ══════════════════════════════════════════════════════════════════
+
+            /**
+             * Estimate how long the browser TTS will take to speak `text` in ms.
+             * Uses words-per-minute based on the current rate slider.
+             */
+            function estimateSpeechDurationMs(text, rate) {
+                const words = text.trim().split(/\s+/).length;
+                const wpm = 150 * (rate || 1.0); // average speaking rate * TTS rate
+                return Math.round((words / wpm) * 60 * 1000);
+            }
+
+            /**
+             * Pre-process a raw bot reply into natural spoken text:
+             *   1. Strip emojis and markdown
+             *   2. Add natural pauses after sentence-ending punctuation
+             *   3. Expand common abbreviations for correct TTS pronunciation
+             *   4. Ensure contractions sound natural (don't → "don't", etc.)
+             */
+            function prepareForSpeech(raw) {
+                let t = raw;
+
+                // Strip emojis (Unicode ranges)
+                t = t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "");
+
+                // Strip markdown bold/italic (* ** _)
+                t = t.replace(/[*_~`#]/g, "");
+
+                // Strip URLs
+                t = t.replace(/https?:\/\/\S+/g, "");
+
+                // Trim "📎 Remembered —" prefix if somehow included
+                t = t.replace(/^📎.*?—\s*/u, "");
+
+                // Strip leftover special punctuation
+                t = t.replace(/[→←↑↓►▶◀◄]/g, "");
+
+                // Expand common abbreviations
+                const abbr = {
+                    AI: "A I",
+                    LSTM: "L S T M",
+                    GPT: "G P T",
+                    btw: "by the way",
+                    tbh: "to be honest",
+                    idk: "I don't know",
+                    imo: "in my opinion",
+                    lol: "ha",
+                    omg: "oh my",
+                    ngl: "not gonna lie",
+                    irl: "in real life",
+                    rn: "right now",
+                    smh: "shaking my head",
+                };
+                for (const [from, to] of Object.entries(abbr)) {
+                    t = t.replace(new RegExp(`\\b${from}\\b`, "gi"), to);
+                }
+
+                // Add slight breathing pause (comma) after sentence breaks if missing
+                // e.g. "Hello. How are you?" → "Hello,  How are you?"
+                t = t.replace(/([.!?])\s+([A-Z])/g, "$1, $2");
+
+                // Remove double spaces
+                t = t.replace(/\s{2,}/g, " ").trim();
+
+                return t;
+            }
+
+            /**
+             * Speak a bot reply with the full Phoenix personality:
+             *   - Pre-processes text for natural speech
+             *   - Estimates duration to sync avatar talk animation
+             *   - Applies emotion-based rate/pitch modulation
+             * Returns the estimated duration in ms (or 0 if TTS disabled).
+             */
+            function speakReply(rawText, emotion) {
+                if (!synth) return 0;
+                if (!document.getElementById("auto-speak-toggle").checked) return 0;
+
+                synth.cancel();
+
+                const clean = prepareForSpeech(rawText);
+                if (!clean) return 0;
+
+                const rate = parseFloat(document.getElementById("rate-slider").value);
+                const estMs = estimateSpeechDurationMs(clean, rate);
+
+                const utt = new SpeechSynthesisUtterance(clean);
+                utt.voice = selectedVoice || null;
+                utt.volume = parseFloat(document.getElementById("vol-slider").value);
+                utt.rate = rate;
+                utt.pitch = parseFloat(document.getElementById("pitch-slider").value);
+
+                // Emotion modulation
+                const emotionMod = {
+                    happy: { rateDelta: +0.12, pitchDelta: +0.08 },
+                    sad: { rateDelta: -0.12, pitchDelta: -0.1 },
+                    angry: { rateDelta: +0.08, pitchDelta: +0.04 },
+                    anxious: { rateDelta: +0.06, pitchDelta: +0.04 },
+                    confused: { rateDelta: -0.04, pitchDelta: 0 },
+                    neutral: { rateDelta: 0, pitchDelta: 0 },
+                };
+                const mod = emotionMod[emotion] || emotionMod.neutral;
+                utt.rate = Math.max(0.5, Math.min(2.0, utt.rate + mod.rateDelta));
+                utt.pitch = Math.max(0.5, Math.min(2.0, utt.pitch + mod.pitchDelta));
+
+                utt.onstart = () => {
+                    isSpeaking = true;
+                    document.getElementById("speaking-badge").classList.add("show");
+                    startMouthRhythm();
+                };
+
+                utt.onend = utt.onerror = () => {
+                    isSpeaking = false;
+                    document.getElementById("speaking-badge").classList.remove("show");
+                    stopMouthRhythm();
+                    // Return avatar to idle once speech ends
+                    if (!isTalking) playClip("idle", 0.8);
+                };
+
+                setTimeout(() => synth.speak(utt), 80);
+                return estMs;
+            }
+
+            // ══════════════════════════════════════════════════════════════════
+            //  VOICE ENGINE  (Web Speech API — SpeechSynthesis)
+            // ══════════════════════════════════════════════════════════════════
+
+            const synth = window.speechSynthesis;
+            let voiceList = [];
+            let selectedVoice = null;
+            let isSpeaking = false;
+
+            // ── Jaw animation state ────────────────────────────────────────────
+            // We find jaw/mouth bones by name and drive them during speech.
+            let jawBone = null; // THREE.Bone or null
+            let jawOpenTarget = 0; // 0 = closed, 1 = fully open
+            let jawCurrent = 0;
+            const JAW_SPEED = 8; // lerp speed per second
+            const JAW_NAMES = ["jaw", "Jaw", "mouth", "Mouth", "chin", "Chin", "lower_jaw", "lowerJaw"];
+
+            function findJawBone(root) {
+                let found = null;
+                root.traverse((obj) => {
+                    if (found) return;
+                    if (
+                        (obj.isBone || obj.type === "Bone") &&
+                        JAW_NAMES.some((n) => obj.name.toLowerCase().includes(n.toLowerCase()))
+                    ) {
+                        found = obj;
+                    }
+                });
+                return found;
+            }
+
+            // Called after avatar loads
+            function initJaw() {
+                if (!avatar) return;
+                jawBone = findJawBone(avatar);
+                if (jawBone) console.log("✅ Jaw bone found:", jawBone.name);
+                else console.log("ℹ️  No jaw bone — using head nod for speech");
+            }
+
+            // Update jaw in render loop (called from animate())
+            function updateJaw(dt) {
+                if (!avatar) return;
+
+                // Lerp jaw toward target
+                jawCurrent += (jawOpenTarget - jawCurrent) * Math.min(1, JAW_SPEED * dt);
+
+                if (jawBone) {
+                    // Rotate jaw bone on X axis (open/close)
+                    jawBone.rotation.x = jawCurrent * 0.35;
+                } else if (isSpeaking && avatar.rotation !== undefined) {
+                    // Fallback: subtle head nod rhythm driven by sin wave
+                    // (avatar root Y rotation oscillates slightly while speaking)
+                    avatar.rotation.y = Math.sin(Date.now() * 0.008) * 0.04;
+                }
+            }
+
+            // ── Mouth open/close rhythm while speaking ─────────────────────────
+            let mouthRhythmTimer = null;
+
+            function startMouthRhythm() {
+                if (mouthRhythmTimer) return;
+                let phase = 0;
+                mouthRhythmTimer = setInterval(() => {
+                    // Oscillate open/close: half-wave sine so it opens & closes naturally
+                    phase += 0.38;
+                    jawOpenTarget = Math.max(0, Math.sin(phase)) * 0.9;
+                }, 80);
+            }
+
+            function stopMouthRhythm() {
+                if (mouthRhythmTimer) {
+                    clearInterval(mouthRhythmTimer);
+                    mouthRhythmTimer = null;
+                }
+                jawOpenTarget = 0;
+            }
+
+            // ── Voice population ───────────────────────────────────────────────
+            function populateVoices() {
+                voiceList = synth.getVoices();
+                const sel = document.getElementById("voice-select");
+                sel.innerHTML = "";
+
+                // Group: english first, then others
+                const en = voiceList.filter((v) => v.lang.startsWith("en"));
+                const other = voiceList.filter((v) => !v.lang.startsWith("en"));
+                const sorted = [...en, ...other];
+
+                if (sorted.length === 0) {
+                    sel.innerHTML = '<option value="">No voices available</option>';
+                    return;
+                }
+
+                sorted.forEach((v, i) => {
+                    const opt = document.createElement("option");
+                    opt.value = i; // use index into sorted array
+                    opt.textContent = `${v.name} (${v.lang})${v.localService ? " 📴" : " 🌐"}`;
+                    sel.appendChild(opt);
+                });
+
+                // Pick a decent default: prefer a deep/robotic-sounding English voice
+                const preferred = ["Google UK English Male", "Microsoft David", "Alex", "Daniel", "en-GB"];
+                let defaultIdx = 0;
+                for (const pref of preferred) {
+                    const idx = sorted.findIndex((v) => v.name.includes(pref) || v.lang === pref);
+                    if (idx !== -1) {
+                        defaultIdx = idx;
+                        break;
+                    }
+                }
+                sel.value = defaultIdx;
+                selectedVoice = sorted[defaultIdx];
+
+                // Store sorted list for later lookups
+                sel._voiceSorted = sorted;
+            }
+
+            // Voices load async
+            synth.onvoiceschanged = populateVoices;
+            populateVoices();
+
+            document.getElementById("voice-select").addEventListener("change", function () {
+                const sorted = this._voiceSorted || voiceList;
+                selectedVoice = sorted[parseInt(this.value)] || null;
+            });
+
+            // ── Slider helpers ────────────────────────────────────────────────
+            function linkSlider(sliderId, valId) {
+                const slider = document.getElementById(sliderId);
+                const valEl = document.getElementById(valId);
+                slider.addEventListener("input", () => {
+                    valEl.textContent = parseFloat(slider.value).toFixed(1);
+                });
+            }
+            linkSlider("vol-slider", "vol-val");
+            linkSlider("rate-slider", "rate-val");
+            linkSlider("pitch-slider", "pitch-val");
+
+            // ── Core speak function ────────────────────────────────────────────
+            function speakText(text, emotion) {
+                if (!synth) return;
+                if (!document.getElementById("auto-speak-toggle").checked) return;
+
+                // Cancel anything already speaking
+                synth.cancel();
+
+                // Strip emoji / special chars that TTS reads out loud
+                const clean = text
+                    .replace(/[⚡✨💧🔥💫❓📎🤗😌😊😄🤔]/g, "")
+                    .replace(/[^\w\s',.!?-]/g, " ")
+                    .trim();
+                if (!clean) return;
+
+                const utt = new SpeechSynthesisUtterance(clean);
+                utt.voice = selectedVoice || null;
+                utt.volume = parseFloat(document.getElementById("vol-slider").value);
+                utt.rate = parseFloat(document.getElementById("rate-slider").value);
+                utt.pitch = parseFloat(document.getElementById("pitch-slider").value);
+
+                // Slightly adjust rate/pitch by emotion
+                const emotionMod = {
+                    happy: { rateDelta: +0.15, pitchDelta: +0.1 },
+                    sad: { rateDelta: -0.15, pitchDelta: -0.1 },
+                    angry: { rateDelta: +0.1, pitchDelta: +0.05 },
+                    anxious: { rateDelta: +0.08, pitchDelta: +0.05 },
+                    confused: { rateDelta: -0.05, pitchDelta: 0 },
+                    neutral: { rateDelta: 0, pitchDelta: 0 },
+                };
+                const mod = emotionMod[emotion] || emotionMod.neutral;
+                utt.rate = Math.max(0.5, Math.min(2.0, utt.rate + mod.rateDelta));
+                utt.pitch = Math.max(0.5, Math.min(2.0, utt.pitch + mod.pitchDelta));
+
+                utt.onstart = () => {
+                    isSpeaking = true;
+                    document.getElementById("speaking-badge").classList.add("show");
+                    startMouthRhythm();
+                };
+
+                utt.onend = utt.onerror = () => {
+                    isSpeaking = false;
+                    document.getElementById("speaking-badge").classList.remove("show");
+                    stopMouthRhythm();
+                };
+
+                // Small delay so TTS fires after UI update
+                setTimeout(() => synth.speak(utt), 80);
+            }
+
+            function speakTest() {
+                speakReply("Hello! I am Phoenix, your AI companion. How can I help you today?", "neutral");
+            }
+
+            // ── Voice panel collapse toggle ────────────────────────────────────
+            function toggleVoicePanel() {
+                const body = document.getElementById("voice-body");
+                const chevron = document.getElementById("voice-chevron");
+                const isOpen = !body.classList.contains("collapsed");
+                body.classList.toggle("collapsed", isOpen);
+                chevron.classList.toggle("open", !isOpen);
+            }
+
+            // ══════════════════════════════════════════════════════════════════
+            //  GAZE TRACKING — avatar "looks at" mouse cursor
+            // ══════════════════════════════════════════════════════════════════
+
+            // We track normalised mouse position relative to the viewport,
+            // then use it to nudge the camera target slightly, giving the
+            // impression the avatar is following the user's gaze.
+
+            let mouseNorm = { x: 0, y: 0 }; // -1..1
+            let gazeTarget = new THREE.Vector3(0, 1.2, 0); // where camera looks
+            const GAZE_STRENGTH = 0.18; // how much the avatar "turns" (world units)
+            const GAZE_LERP = 3.5; // lerp speed
+
+            // Head bone gaze (if available)
+            let headBone = null;
+            const HEAD_NAMES = ["head", "Head", "HEAD", "neck", "Neck"];
+
+            function findHeadBone(root) {
+                let found = null;
+                root.traverse((obj) => {
+                    if (found) return;
+                    if (
+                        (obj.isBone || obj.type === "Bone") &&
+                        HEAD_NAMES.some((n) => obj.name.toLowerCase().includes(n.toLowerCase()))
+                    ) {
+                        found = obj;
+                    }
+                });
+                return found;
+            }
+
+            function initGaze() {
+                if (!avatar) return;
+                headBone = findHeadBone(avatar);
+                if (headBone) console.log("✅ Head bone found:", headBone.name);
+            }
+
+            // Track mouse over the ENTIRE page (not just viewport)
+            document.addEventListener("mousemove", (e) => {
+                const vp = document.getElementById("viewport");
+                const rect = vp.getBoundingClientRect();
+                // Normalise to -1..1 within viewport bounds, clamp
+                mouseNorm.x = Math.max(-1, Math.min(1, ((e.clientX - rect.left) / rect.width - 0.5) * 2));
+                mouseNorm.y = Math.max(-1, Math.min(1, ((e.clientY - rect.top) / rect.height - 0.5) * 2));
+            });
+
+            // Touch support (mobile)
+            document.addEventListener(
+                "touchmove",
+                (e) => {
+                    if (!e.touches.length) return;
+                    const vp = document.getElementById("viewport");
+                    const rect = vp.getBoundingClientRect();
+                    mouseNorm.x = Math.max(
+                        -1,
+                        Math.min(1, ((e.touches[0].clientX - rect.left) / rect.width - 0.5) * 2)
+                    );
+                    mouseNorm.y = Math.max(
+                        -1,
+                        Math.min(1, ((e.touches[0].clientY - rect.top) / rect.height - 0.5) * 2)
+                    );
+                },
+                { passive: true }
+            );
+
+            function updateGaze(dt) {
+                // Target: base look-at + gaze offset from mouse
+                const targetX = mouseNorm.x * GAZE_STRENGTH;
+                const targetY = 1.2 + mouseNorm.y * -GAZE_STRENGTH * 0.6;
+
+                gazeTarget.x += (targetX - gazeTarget.x) * Math.min(1, GAZE_LERP * dt);
+                gazeTarget.y += (targetY - gazeTarget.y) * Math.min(1, GAZE_LERP * dt);
+
+                // Drive head bone if available (subtle Y/X rotation)
+                if (headBone) {
+                    const targetRotY = mouseNorm.x * 0.2;
+                    const targetRotX = mouseNorm.y * -0.12;
+                    headBone.rotation.y += (targetRotY - headBone.rotation.y) * Math.min(1, GAZE_LERP * dt);
+                    headBone.rotation.x += (targetRotX - headBone.rotation.x) * Math.min(1, GAZE_LERP * dt);
+                } else if (!controls.active) {
+                    // Fallback: nudge OrbitControls target
+                    controls.target.x += (gazeTarget.x - controls.target.x) * Math.min(1, 2 * dt);
+                    controls.target.y += (gazeTarget.y - controls.target.y) * Math.min(1, 2 * dt);
+                }
+            }
+
+            // ══════════════════════════════════════════════════════════════════
+            //  PATCH: hook into existing systems after model loads
+            // ══════════════════════════════════════════════════════════════════
+
+            // Monkey-patch the existing loader success callback by wrapping
+            // the original "loadingEl.classList.add('hidden')" — we wait for
+            // avatar to be set (polled), then init gaze + jaw.
+
+            (function waitForAvatar() {
+                const interval = setInterval(() => {
+                    if (avatar) {
+                        clearInterval(interval);
+                        initJaw();
+                        initGaze();
+                        console.log("✅ Gaze + Jaw initialised");
+                    }
+                }, 200);
+            })();
+
+            // ── Patch animate() to call updateJaw + updateGaze ────────────────
+            // We override the existing animate function by hooking into the
+            // RAF loop via a secondary requestAnimationFrame chain that reads
+            // the same clock delta.
+
+            const _jawGazeClock = new THREE.Clock();
+            (function jawGazeLoop() {
+                requestAnimationFrame(jawGazeLoop);
+                const dt = _jawGazeClock.getDelta();
+                updateJaw(dt);
+                updateGaze(dt);
+            })();
+
+            // ── Patch sendMessage to call speakText after reply ───────────────
+            // We wrap the existing sendMessage to intercept the bot reply
+            // and call speakText without duplicating the fetch logic.
+
+            const _origSendMessage = sendMessage;
+            window._phoenixVoicePatch = true;
+
+            // Override the bot message append to speak it
+            const _origAppendMessage = appendMessage;
+            window._lastBotEmotion = "neutral";
+
+            // We intercept at the chat level: after fetch resolves with data,
+            // startTalking already fires → we also call speakText there.
+            // Simplest: wrap the existing sendMessage async function.
+
+            (function patchSendMessage() {
+                // Replace sendMessage with a patched version
+                window.sendMessage = async function () {
+                    const text = document.getElementById("user-input").value.trim();
+                    if (!text) return;
+
+                    document.getElementById("user-input").value = "";
+                    document.getElementById("user-input").style.height = "";
+                    document.getElementById("send-btn").disabled = true;
+
+                    turnCount++;
+                    appendMessage("user", text);
+                    showTyping();
+                    startThinking();
+
+                    try {
+                        const res = await fetch("/chat", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ message: text }),
+                        });
+                        const data = await res.json();
+                        hideTyping();
+
+                        if (data.error) {
+                            appendMessage("bot", `⚠ ${data.error}`);
+                            stopThinking();
+                        } else {
+                            const emotion = data.emotion || "neutral";
+                            if (data.learned) learnCount++;
+
+                            // Trigger avatar behaviour
+                            startTalking(emotion);
+
+                            // ✅ SPEAK with full personality pre-processor + duration-synced animation
+                            const estDurationMs = speakReply(data.reply, emotion);
+
+                            // Re-trigger startTalking with the speech duration so avatar
+                            // keeps talking for exactly as long as Phoenix is speaking
+                            startTalking(emotion, estDurationMs);
+
+                            appendMessage("bot", data.reply);
+                            updateStats(data);
+
+                            if (data.new_facts && Object.keys(data.new_facts).length > 0) {
+                                const factStr = Object.entries(data.new_facts)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(", ");
+                                appendMessage("bot", `📎 Remembered — ${factStr}`);
+                            }
+                        }
+                    } catch (err) {
+                        hideTyping();
+                        stopThinking();
+                        appendMessage("bot", "⚠ Connection error. Is the server running?");
+                    }
+
+                    document.getElementById("send-btn").disabled = false;
+                    document.getElementById("user-input").focus();
+                };
+
+                // Re-bind button and Enter key to the patched version
+                document.getElementById("send-btn").onclick = null;
+                document.getElementById("send-btn").addEventListener("click", () => window.sendMessage());
+                document.getElementById("user-input").removeEventListener("keydown", null);
+                document.getElementById("user-input").addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        window.sendMessage();
+                    }
+                });
+            })();
+
+            // ── Stop speech when tab is hidden / page closes ──────────────────
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) synth.cancel();
+            });
+            window.addEventListener("beforeunload", () => synth.cancel());
+        </script>
+    </body>
 </html>
