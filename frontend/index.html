@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Phoenix AI</title>
+<title>Phoenix</title>
+<link rel="icon" type="image/png" href="./assets/image/Phoenix.png">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 
 <style>
@@ -46,7 +47,7 @@ body::before{
 /* ── Viewport HUD overlays ───────────────────────────────────────── */
 #hud-top{
   position:absolute;top:18px;left:20px;right:20px;
-  display:flex;justify-content:center;align-items:flex-start;
+  display:flex;justify-content:space-between;align-items:flex-start;
   pointer-events:none;
 }
 .phoenix-logo{
@@ -322,6 +323,7 @@ body::before{
   <!-- ── 3D Viewport ──────────────────────────────────────────────── -->
   <div id="viewport" data-emotion="neutral">
     <canvas id="three-canvas"></canvas>
+    <img src="./assets/image/Phoenix.png" id="watermark-logo">
 
     <!-- Corner brackets -->
     <div class="bracket tl"></div>
@@ -331,10 +333,9 @@ body::before{
 
     <!-- HUD top -->
     <div id="hud-top">
-      <div>
-        <img src="./assets/image/Phoenix.png" alt="Phoenix Logo" class="phoenix-logo">
-      </div>
-      </div>
+<div>
+  <img src="./assets/image/Phoenix.png" alt="Phoenix" class="phoenix-logo">
+</div>
       <div id="status-pill">
         <div class="dot"></div>
         <span>ONLINE</span>
@@ -357,16 +358,19 @@ body::before{
       <span>SPEAKING</span>
     </div>
     <!-- Loading -->
-    <div id="loading">
-      <div class="load-ring"></div>
-      <div class="load-txt">INITIALISING AVATAR</div>
-    </div>
-  </div>
-
+<div id="loading">
+  <img src="./assets/image/Phoenix.png" class="loading-logo">
+  <div class="load-ring"></div>
+  <div class="load-txt">INITIALISING PHOENIX</div>
+</div>
+</div> 
   <!-- ── Chat Panel ───────────────────────────────────────────────── -->
   <div id="chat-panel">
     <div id="chat-header">
-      <div class="chat-title">CHAT INTERFACE</div>
+<div class="chat-title">
+  <img src="./assets/image/Phoenix.png" class="chat-logo">
+  <span>Phoenix</span>
+</div>
       <div class="chat-meta" id="session-meta">SESSION // 0000</div>
     </div>
 

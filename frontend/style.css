@@ -256,3 +256,31 @@ button {
 }
 
 .close-btn { background: none; border: none; color: var(--muted); cursor: pointer; float: right; }
+
+.loading-logo{
+    width:100px;
+    margin-bottom:15px;
+    filter:drop-shadow(0 0 20px rgba(255,80,0,.8));
+}
+
+#watermark-logo{
+    position:absolute;
+    top:20px;
+    right:20px;
+    width:120px;
+    opacity:.15;
+    pointer-events:none;
+    z-index:5;
+}
+
+.chat-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.chat-logo{
+    width:28px;
+    height:28px;
+    object-fit:contain;
+}
