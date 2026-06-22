@@ -234,7 +234,7 @@ def ollama_reply(user_text: str, tone_hint: str, temperature: float,
 # RESPOND
 # ══════════════════════════════════════════════════════════════════════════════
 
-def respond(text: str, session_id: str) -> dict:
+def respond(text: str, session_id: str, allow_loosened: bool = False) -> dict:
     emo         = emotion_summary(text)
     emotion     = emo["emotion"]
     temperature = emo["temperature"]
@@ -243,12 +243,13 @@ def respond(text: str, session_id: str) -> dict:
     reply = ollama_reply(text, tone_hint, temperature, session_id)
 
     # Determine whether this session has relaxed filtering enabled
-    try:
-        facts_all = get_all_facts()
-        nolimits_key = f"nolimits_{session_id}"
-        allow_loosened = facts_all.get(nolimits_key) == "1"
-    except Exception:
-        allow_loosened = False
+    if not allow_loosened:
+        try:
+            facts_all = get_all_facts()
+            nolimits_key = f"nolimits_{session_id}"
+            allow_loosened = facts_all.get(nolimits_key) == "1"
+        except Exception:
+            allow_loosened = False
 
     passed, _ = filter_response(reply, text, allow_loosened=allow_loosened)
     if not passed or len(reply.split()) < 3:
@@ -294,7 +295,7 @@ ft_model        = None   # legacy compat
 # CHAT STEP
 # ══════════════════════════════════════════════════════════════════════════════
 
-def chat_step(text: str, session_id: str = None) -> dict:
+def chat_step(text: str, session_id: str = None, allow_loosened: bool = False) -> dict:
     """
     Main entry-point for both CLI and web UI.
     Pass session_id from the web UI to isolate per-user memory.
@@ -305,12 +306,13 @@ def chat_step(text: str, session_id: str = None) -> dict:
     sid  = session_id or current_session
     text = text.strip()
 
-    try:
-        facts_all = get_all_facts()
-        nolimits_key = f"nolimits_{sid}"
-        allow_loosened = facts_all.get(nolimits_key) == "1"
-    except Exception:
-        allow_loosened = False
+    if not allow_loosened:
+        try:
+            facts_all = get_all_facts()
+            nolimits_key = f"nolimits_{sid}"
+            allow_loosened = facts_all.get(nolimits_key) == "1"
+        except Exception:
+            allow_loosened = False
 
     new_facts = extract_and_save_facts(text)
 
@@ -352,7 +354,7 @@ def chat_step(text: str, session_id: str = None) -> dict:
                 "learned": False,    "new_facts": new_facts, "score": 1.0,
             }
 
-    result  = respond(text, session_id=sid)
+    result  = respond(text, session_id=sid, allow_loosened=allow_loosened)
     reply   = result["reply"]
     emotion = result["emotion"]
 

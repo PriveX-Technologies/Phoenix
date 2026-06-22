@@ -112,6 +112,7 @@ def static_proxy(path):
 def chat():
     data       = request.get_json()
     text       = data.get("message", "").strip()
+    allow_loosened = data.get("allow_loosened", False)
     session_id = _get_user_session_id()
 
     if not text:
@@ -137,7 +138,8 @@ def chat():
 
     try:
         # Pass per-user session_id into chat_step
-        result = inf.chat_step(text, session_id=session_id)
+        result = inf.chat_step(text, session_id=session_id,
+                               allow_loosened=allow_loosened)
         _inc_user_turn()
         return jsonify({
             "reply":     result["reply"],
@@ -196,7 +198,8 @@ def voice():
                         "error": f"Model not loaded: {err}"}), 500
 
     session_id = _get_user_session_id()
-    result     = inf.chat_step(transcript, session_id=session_id)
+    result     = inf.chat_step(transcript, session_id=session_id,
+                               allow_loosened=True)
     _inc_user_turn()
 
     return jsonify({

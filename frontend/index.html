@@ -380,6 +380,48 @@ body::before{
       <button id="send-btn">SEND</button>
     </div>
 
+    <div id="voice-panel">
+      <div id="voice-header" onclick="toggleVoicePanel()">
+        <div class="voice-title">VOICE CONTROL</div>
+        <div id="voice-chevron" class="voice-chevron">⌄</div>
+      </div>
+      <div id="voice-body" class="collapsed">
+        <div class="voice-toggle-row">
+          <span class="vtoggle-label">Voice Output</span>
+          <label class="vtoggle">
+            <input id="auto-speak-toggle" type="checkbox" checked>
+            <span class="vtoggle-track"><span class="vtoggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <select id="voice-select"></select>
+
+        <div class="vslider-row">
+          <span class="vslider-label">VOL</span>
+          <input id="vol-slider" class="vslider" type="range" min="0" max="1" step="0.05" value="0.9">
+          <span id="vol-val" class="vslider-val">0.9</span>
+        </div>
+        <div class="vslider-row">
+          <span class="vslider-label">RATE</span>
+          <input id="rate-slider" class="vslider" type="range" min="0.6" max="2.0" step="0.05" value="1.05">
+          <span id="rate-val" class="vslider-val">1.1</span>
+        </div>
+        <div class="vslider-row">
+          <span class="vslider-label">PITCH</span>
+          <input id="pitch-slider" class="vslider" type="range" min="0.5" max="2.0" step="0.05" value="1.0">
+          <span id="pitch-val" class="vslider-val">1.0</span>
+        </div>
+
+        <div class="voice-toggle-row">
+          <span class="vtoggle-label">Voice Input</span>
+          <button id="voice-listen-btn" class="speak-button" type="button">Start Listening</button>
+        </div>
+        <div id="voice-status" style="font-size:.72rem;color:var(--text-dim);letter-spacing:.08em;">Say something to Phoenix.</div>
+
+        <button id="speak-test-btn" type="button">Test Voice Output</button>
+      </div>
+    </div>
+
     <div id="stats-bar">
       <div class="stat-item">TURNS<span id="s-turns">0</span></div>
       <div class="stat-item">LEARNED<span id="s-learned">0</span></div>
@@ -401,6 +443,7 @@ body::before{
 
 <script type="module">
 import * as THREE   from 'three';
+import { createSpeechRecognition } from './voice-helper.js';
 import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -896,6 +939,91 @@ const inputEl     = document.getElementById('user-input');
 const sendBtn     = document.getElementById('send-btn');
 const typingEl    = document.getElementById('typing');
 
+let recognition = null;
+let isVoiceListening = false;
+const voiceStatusEl = document.getElementById('voice-status');
+const voiceListenBtn = document.getElementById('voice-listen-btn');
+const speakTestBtn = document.getElementById('speak-test-btn');
+
+function setVoiceStatus(message) {
+  if (voiceStatusEl) {
+    voiceStatusEl.textContent = message;
+  }
+}
+
+function updateVoiceButton() {
+  if (!voiceListenBtn) return;
+  voiceListenBtn.textContent = isVoiceListening ? 'Stop Listening' : 'Start Listening';
+}
+
+function initVoiceInput() {
+  recognition = createSpeechRecognition(async transcript => {
+    isVoiceListening = false;
+    updateVoiceButton();
+    setVoiceStatus(`Heard: "${transcript}"`);
+    if (!transcript) return;
+    await sendVoiceMessage(transcript);
+  }, state => {
+    if (state === 'idle') {
+      isVoiceListening = false;
+      updateVoiceButton();
+      setVoiceStatus('Say something to Phoenix.');
+      return;
+    }
+    if (state.startsWith('error:')) {
+      setVoiceStatus(state.replace('error:', 'Voice error: '));
+      isVoiceListening = false;
+      updateVoiceButton();
+      return;
+    }
+    setVoiceStatus(state.charAt(0).toUpperCase() + state.slice(1));
+  });
+  if (!recognition) {
+    if (voiceListenBtn) {
+      voiceListenBtn.disabled = true;
+    }
+    setVoiceStatus('Voice input unavailable in this browser.');
+  }
+}
+
+async function sendVoiceMessage(text) {
+  if (!text) return;
+  turnCount++;
+  appendMessage('user', text);
+  showTyping();
+  startThinking();
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, allow_loosened: true }),
+    });
+    const data = await res.json();
+    hideTyping();
+    if (data.error) {
+      appendMessage('bot', `⚠ ${data.error}`);
+      stopThinking();
+    } else {
+      const emotion = data.emotion || 'neutral';
+      if (data.learned) learnCount++;
+      startTalking(emotion);
+      const estDurationMs = speakReply(data.reply, emotion);
+      startTalking(emotion, estDurationMs);
+      appendMessage('bot', data.reply);
+      updateStats(data);
+      if (data.new_facts && Object.keys(data.new_facts).length > 0) {
+        const factStr = Object.entries(data.new_facts)
+          .map(([k, v]) => `${k}: ${v}`).join(', ');
+        appendMessage('bot', `📎 Remembered — ${factStr}`);
+      }
+    }
+  } catch (err) {
+    hideTyping();
+    stopThinking();
+    appendMessage('bot', '⚠ Connection error. Is the server running?');
+  }
+}
+
 function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
@@ -1001,6 +1129,33 @@ sendBtn.addEventListener('click', sendMessage);
 inputEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+
+  if (voiceListenBtn) {
+    voiceListenBtn.addEventListener('click', () => {
+      if (!recognition) return;
+      if (isVoiceListening) {
+        recognition.stop();
+        isVoiceListening = false;
+        updateVoiceButton();
+        setVoiceStatus('Stopping voice input...');
+      } else {
+        try {
+          recognition.start();
+          isVoiceListening = true;
+          updateVoiceButton();
+          setVoiceStatus('Listening...');
+        } catch (err) {
+          setVoiceStatus('Voice start failed.');
+          console.error('SpeechRecognition start error', err);
+        }
+      }
+    });
+  }
+
+  if (speakTestBtn) {
+    speakTestBtn.addEventListener('click', () => speakReply('Hello! I am Phoenix, your AI companion. How can I help you today?', 'neutral'));
+  }
+  initVoiceInput();
 
 // Auto-resize textarea
 inputEl.addEventListener('input', () => {
