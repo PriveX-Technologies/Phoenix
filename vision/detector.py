@@ -1,0 +1,4 @@
+"""
+Phoenix detector module
+"""
+

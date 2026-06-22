@@ -1,70 +1,14 @@
-# =========================
-# PYTHON CACHE
-# =========================
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
+.env
 
-# =========================
-# VIRTUAL ENVIRONMENTS
-# =========================
-venv/
-env/
-.venv/
-
-# =========================
-# OS FILES
-# =========================
-.DS_Store
-Thumbs.db
-
-# =========================
-# IDE FILES
-# =========================
-.vscode/
-.idea/
-
-# =========================
-# LOGS
-# =========================
-*.log
-
-# =========================
-# AI MODELS / CHECKPOINTS
-# =========================
+logs/
 models/
-phoenix_ft_checkpoints/
-checkpoints/
 
-# Large AI files
-*.safetensors
+phoenix_ft/
+phoenix_ft_checkpoints/*
+
 *.pt
 *.pth
 *.bin
-*.onnx
-*.ckpt
-
-# Torch binaries
-*.dll
-
-# =========================
-# DATASETS
-# =========================
-data/
-*.csv
-*.jsonl
-
-# =========================
-# JUPYTER
-# =========================
-.ipynb_checkpoints/
-
-# =========================
-# TEMP / BUILD FILES
-# =========================
-*.tmp
-*.temp
-.cache/
-dist/
-build/
+*.safetensors

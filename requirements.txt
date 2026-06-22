@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # =========================
 # Phoenix Core
 # =========================
@@ -41,3 +42,5 @@ faiss-cpu>=1.8
 # =========================
 python-dotenv>=1.0
 pydantic>=2.8
+=======
+>>>>>>> b73e004 (moving to fun part ahahahahahahhahhhahhhahaha( evil laugh 😈))
