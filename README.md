@@ -3,34 +3,42 @@
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=7c3aed&height=120&section=header&text=&fontSize=0"/>
 
 ```
-ÔûêÔûêÔûêÔûêÔûêÔûêÔòù ÔûêÔûêÔòù  ÔûêÔûêÔòù ÔûêÔûêÔûêÔûêÔûêÔûêÔòù ÔûêÔûêÔûêÔûêÔûêÔûêÔûêÔòùÔûêÔûêÔûêÔòù   ÔûêÔûêÔòùÔûêÔûêÔòùÔûêÔûêÔòù  ÔûêÔûêÔòù
-ÔûêÔûêÔòöÔòÉÔòÉÔûêÔûêÔòùÔûêÔûêÔòæ  ÔûêÔûêÔòæÔûêÔûêÔòöÔòÉÔòÉÔòÉÔûêÔûêÔòùÔûêÔûêÔòöÔòÉÔòÉÔòÉÔòÉÔòØÔûêÔûêÔûêÔûêÔòù  ÔûêÔûêÔòæÔûêÔûêÔòæÔòÜÔûêÔûêÔòùÔûêÔûêÔòöÔòØ
-ÔûêÔûêÔûêÔûêÔûêÔûêÔòöÔòØÔûêÔûêÔûêÔûêÔûêÔûêÔûêÔòæÔûêÔûêÔòæ   ÔûêÔûêÔòæÔûêÔûêÔûêÔûêÔûêÔòù  ÔûêÔûêÔòöÔûêÔûêÔòù ÔûêÔûêÔòæÔûêÔûêÔòæ ÔòÜÔûêÔûêÔûêÔòöÔòØ 
-ÔûêÔûêÔòöÔòÉÔòÉÔòÉÔòØ ÔûêÔûêÔòöÔòÉÔòÉÔûêÔûêÔòæÔûêÔûêÔòæ   ÔûêÔûêÔòæÔûêÔûêÔòöÔòÉÔòÉÔòØ  ÔûêÔûêÔòæÔòÜÔûêÔûêÔòùÔûêÔûêÔòæÔûêÔûêÔòæ ÔûêÔûêÔòöÔûêÔûêÔòù 
-ÔûêÔûêÔòæ     ÔûêÔûêÔòæ  ÔûêÔûêÔòæÔòÜÔûêÔûêÔûêÔûêÔûêÔûêÔòöÔòØÔûêÔûêÔûêÔûêÔûêÔûêÔûêÔòùÔûêÔûêÔòæ ÔòÜÔûêÔûêÔûêÔûêÔòæÔûêÔûêÔòæÔûêÔûêÔòöÔòØ ÔûêÔûêÔòù
-ÔòÜÔòÉÔòØ     ÔòÜÔòÉÔòØ  ÔòÜÔòÉÔòØ ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØÔòÜÔòÉÔòØ  ÔòÜÔòÉÔòÉÔòÉÔòØÔòÜÔòÉÔòØÔòÜÔòÉÔòØ  ÔòÜÔòÉÔòØ
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  ██████╗ ██╗  ██╗ ██████╗ ███████╗███╗   ██╗██╗██╗  ██╗      ║
+║  ██╔══██╗██║  ██║██╔═══██╗██╔════╝████╗  ██║██║╚██╗██╔╝      ║
+║  ██████╔╝███████║██║   ██║█████╗  ██╔██╗ ██║██║ ╚███╔╝       ║
+║  ██╔═══╝ ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║██║ ██╔██╗       ║
+║  ██║     ██║  ██║╚██████╔╝███████╗██║ ╚████║██║██╔╝ ██╗      ║
+║  ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝      ║
+║                                                              ║
+║        LOCAL AI • MEMORY • VOICE • VISION • AGENT            ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-### ­ƒöÑ Your Local AI Companion
+### 🐦‍🔥 A Living AI Companion, Not A Chatbot
 
-*Chat. Feel. Remember. Connect.*
+*Chat. Feel. Remember. **Execute.***
 
 <br/>
 
 ![Python](https://img.shields.io/badge/Python-3.10+-7c3aed?style=for-the-badge&logo=python&logoColor=white&labelColor=3b0764)
-![Flask](https://img.shields.io/badge/Flask-Web_UI-a855f7?style=for-the-badge&logo=flask&logoColor=white&labelColor=3b0764)
-![Ollama](https://img.shields.io/badge/Ollama-Local-c084fc?style=for-the-badge&logoColor=white&labelColor=3b0764)
-![Qwen](https://img.shields.io/badge/Qwen-Powered-dc2626?style=for-the-badge&logoColor=white&labelColor=7c3aed)
-![SQLite](https://img.shields.io/badge/SQLite-Memory-a855f7?style=for-the-badge&logo=sqlite&logoColor=white&labelColor=3b0764)
-![Platform](https://img.shields.io/badge/Windows%20%7C%20Linux%20%7C%20macOS-cross--platform-7c3aed?style=for-the-badge&labelColor=3b0764)
+![Flask](https://img.shields.io/badge/Flask-Web_Engine-a855f7?style=for-the-badge&logo=flask&logoColor=white&labelColor=3b0764)
+![Ollama](https://img.shields.io/badge/Ollama-Brain-c084fc?style=for-the-badge&logoColor=white&labelColor=3b0764)
+![Qwen](https://img.shields.io/badge/Qwen-AI_Model-dc2626?style=for-the-badge&logoColor=white&labelColor=7c3aed)
+![Three.js](https://img.shields.io/badge/Three.js-Avatar-7928ca?style=for-the-badge&logo=threedotjs&logoColor=white&labelColor=3b0764)
+![Desktop](https://img.shields.io/badge/Desktop_Automation-Planned-f97316?style=for-the-badge&labelColor=3b0764)
 ![License](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge&labelColor=3b0764)
 ![Status](https://img.shields.io/badge/Status-Active_Development-dc2626?style=for-the-badge&labelColor=7c3aed)
 
 <br/>
 
-**No subscriptions. No cloud dependency. No API bills.**
+**No subscriptions. No cloud. No telemetry.**
 
-Powered entirely by local AI models through Ollama.
+Phoenix runs entirely on your machine—brain, eyes, voice, and avatar.
+
+It's not asking for permission. It's becoming part of your desktop.
 
 <br/>
 
@@ -40,19 +48,35 @@ Powered entirely by local AI models through Ollama.
 
 <div align="center">
 
-## ­ƒƒú Overview
+## 🎯 The Vision
 
 </div>
 
-Phoenix is an open-source, emotionally intelligent AI companion that runs **100% on your machine** using local language models. It remembers who you are, detects how you feel, and responds with a consistent human-like personality ÔÇö powered by Qwen through Ollama.
+Phoenix is an experiment in creating a **digital being** that lives on your machine.
 
-No accounts. No API keys. No monthly bills. No telemetry. **Just conversation.**
+Not an app in a browser tab. Not an API you call. **An entity.**
+
+It watches. It listens. It remembers. It acts.
+
+The 3D cyber samurai avatar is not decorative—it is the **embodiment** of Phoenix's agency. When you ask it to do something, you see it do it.
+
+```
+Your command
+    ↓
+Phoenix understands
+    ↓
+Samurai moves toward action
+    ↓
+System executes
+    ↓
+Avatar performs triumphant gesture
+```
 
 ---
 
 <div align="center">
 
-## Ô£¿ Features
+## ✨ Core Mechanics
 
 </div>
 
@@ -60,45 +84,47 @@ No accounts. No API keys. No monthly bills. No telemetry. **Just conversation.**
 <tr>
 <td width="50%">
 
-**­ƒñû Local AI Engine**
-- Powered by Ollama + Qwen
-- Fully offline capable
-- Zero API keys or usage limits
-- Privacy-first by design
-- Hot-swap models via env var
+**🧠 Intelligent Brain**
+- Ollama + Qwen local LLM
+- Emotion detection & adaptation
+- Context-aware memory system
+- Task planning & execution
+- No external API dependency
 
-**­ƒºá Emotion Intelligence**
-- Detects sad, happy, angry, anxious, confused
-- Adjusts tone and temperature per emotion
-- Tone hints injected into every prompt
-- Persona post-processor for natural voice
+**🗣️ Voice First**
+- Local speech recognition (Whisper)
+- Natural conversation flow
+- Wake word detection *(planned)*
+- Multi-language support *(planned)*
 
-**­ƒÆ¼ Persistent Memory**
-- SQLite-backed conversation history
-- Fact extraction (name, age, location, job)
-- Per-session context injection
-- Profile string built automatically
+**💾 Living Memory**
+- SQLite conversation history
+- Automatic fact extraction
+- Session isolation
+- User profile building
 
 </td>
 <td width="50%">
 
-**­ƒÄ¡ Phoenix Personality**
-- Natural filler openers per emotion
-- Thinking pauses on mid-length replies
-- Light follow-up hooks (28% of replies)
-- Consistent voice regardless of backend
+**⚔️ Avatar Is Core**
+- Not decoration—agent embodiment
+- Real-time emotion animation
+- Action visualization
+- Idle/thinking/listening states
+- Personality through movement
 
-**­ƒîÉ Web UI**
-- Flask server + 3D cyber samurai frontend
-- Three.js GLB model rendering
-- Live `/status`, `/facts`, `/stats` endpoints
-- Multi-user isolated sessions
+**🖥️ Desktop Integration** *(Emerging)*
+- Application control
+- File management
+- System automation
+- Screen awareness
+- Intent execution
 
-**­ƒöî Plugin System**
-- Drop `.py` files into `plugins/` to add commands
-- Built-in `/joke`, `/calc`, `/remind`
-- Full session context available to plugins
-- Hot-list via `/plugins` endpoint
+**🔌 Plugin Ecosystem**
+- Extensible command system
+- Drop-and-go architecture
+- Full session context
+- Chat commands + desktop commands
 
 </td>
 </tr>
@@ -108,503 +134,546 @@ No accounts. No API keys. No monthly bills. No telemetry. **Just conversation.**
 
 <div align="center">
 
-## ­ƒÜÇ Quick Start
+## 📊 Feature Matrix
 
 </div>
 
-### 1 ┬À Install Ollama
+| Feature | Status | Phase |
+|:--------|:-------|:------|
+| Local AI inference | ✅ | 1 |
+| Emotion detection | ✅ | 1 |
+| Memory + facts | ✅ | 1 |
+| Voice input (Whisper) | ✅ | 3 |
+| Avatar rendering | ✅ | 3 |
+| Plugin system | ✅ | 4 |
+| Fine-tuning pipeline | ✅ | 4 |
+| **Avatar animations** | 🔄 | 5 |
+| **Idle behaviors** | 🔄 | 5 |
+| **Desktop automation** | 📋 | 6 |
+| **Screen understanding** | 📋 | 7 |
+| **Autonomous task planning** | 📋 | 8 |
+
+---
+
+<div align="center">
+
+## ⚡ Quick Start
+
+</div>
+
+### Prerequisites
 
 ```bash
-# macOS / Linux
-curl -fsSL https://ollama.ai/install.sh | sh
-ollama serve
+# Install Ollama (https://ollama.ai)
+# Install Python 3.10+
+# Optional: faster-whisper for voice
 ```
 
-### 2 ┬À Pull a model
+### Setup
 
 ```bash
-# Recommended ÔÇö fast, great quality
-ollama pull qwen2.5
-
-# Larger variants for better reasoning
-ollama pull qwen2.5:14b
-ollama pull qwen2.5:72b
-```
-
-### 3 ┬À Install Phoenix
-
-```bash
+# 1. Clone & install
 git clone https://github.com/youruser/phoenix.git
 cd phoenix
 pip install -r requirements.txt
-```
 
-### 4 ┬À Run
+# 2. Pull a model
+ollama pull qwen2.5        # Recommended (4GB, fast)
+# OR for better reasoning:
+# ollama pull qwen2.5:14b  # 9GB, more capable
 
-```bash
+# 3. Run Phoenix
 python main.py
 ```
 
+**Output:**
 ```
-ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
-Ôòæ           Phoenix AI  ÔÇô  Ollama           Ôòæ
-ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ
-  Backend : http://localhost:11434
-  Model   : qwen2.5
-
-Ô£à Model 'qwen2.5' ready.
-­ƒöî Plugins: /joke, /calc, /remind
-­ƒÜÇ Starting Phoenix Web UI...
-   Visit: http://localhost:5000
+╔════════════════════════════════════════════╗
+║          Phoenix Awakens                   ║
+║        Ollama Brain: Ready                 ║
+║        Model: qwen2.5                      ║
+║        Avatar: Loaded                      ║
+║        Plugins: /joke /calc /remind        ║
+║                                            ║
+║     → Visit: http://localhost:5000         ║
+╚════════════════════════════════════════════╝
 ```
 
 ---
 
 <div align="center">
 
-## ­ƒÆ¼ Usage
+## 🎮 How It Works
 
 </div>
 
-### Just talk
+### Example: Opening Spotify
 
 ```
-You: hey, I'm feeling really stressed about work
-Phoenix ­ƒÿè: Hey, it's okay. One step at a time ÔÇö what's going on exactly?
-
-You: my name is Alex and I live in Mumbai
-Phoenix: Got it. Nice to meet you, Alex! What's on your mind?
-
-You: what is my name?
-Phoenix: Your name is Alex.
+You: "Play some music"
+  ↓
+Phoenix detects intent + emotion
+  ↓
+Memory loads context
+  ↓
+Emotion detector: happy, energetic
+  ↓
+Samurai performs AWAKENING animation
+  ↓
+Desktop automation finds Spotify
+  ↓
+Application opens
+  ↓
+Samurai performs TRIUMPHANT gesture
+  ↓
+Phoenix: "Already ahead of you! 🎵"
 ```
 
-### CLI commands
+### Example: Answering a Question
 
 ```
-/reset      Clear session memory
-/memory     View recent conversation turns
-/facts      Show all extracted user facts
-/stats      Database statistics
-exit        Quit Phoenix
-```
-
-### Plugin commands
-
-```
-/joke                              Get a random joke
-/calc (12 * 3) / sqrt(9)          Evaluate a math expression
-/remind dentist tomorrow at 6pm   Save a reminder
-/remind list                       View all reminders
-/remind clear                      Clear all reminders
-```
-
-### Voice input *(requires faster-whisper)*
-
-```bash
-pip install faster-whisper
-
-# Send a recorded audio file
-curl -X POST http://localhost:5000/voice -F "audio=@recording.wav"
-```
-
-Response includes both the transcript and Phoenix's reply:
-```json
-{
-  "transcript": "hey how are you",
-  "reply": "I'm doing well! What's on your mind?",
-  "emotion": "neutral"
-}
+You: "What's my name?"
+  ↓
+Memory lookup finds "Alex"
+  ↓
+Emotion analysis: curious
+  ↓
+Samurai tilts head, THINKING animation
+  ↓
+Phoenix responds naturally
+  ↓
+Avatar performs satisfied nod
 ```
 
 ---
 
 <div align="center">
 
-## ­ƒöº Configuration
-
-</div>
-
-Override defaults via environment variables:
-
-| Variable | Default | Description |
-|:---------|:--------|:------------|
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server URL |
-| `OLLAMA_MODEL` | `qwen2.5` | Model tag (any Qwen variant) |
-| `PHOENIX_SECRET` | *(random)* | Flask session secret key |
-| `WHISPER_MODEL` | `tiny` | Whisper model size for voice input |
-
-```bash
-OLLAMA_MODEL=qwen2.5:14b python main.py
-```
-
----
-
-<div align="center">
-
-## ­ƒñû Supported Models
-
-</div>
-
-| Model | Best For | Size |
-|:------|:---------|:-----|
-| `qwen2.5` Ô¡É | Conversation, general use | ~4 GB |
-| `qwen2.5:14b` Ô¡É | Better reasoning + empathy | ~9 GB |
-| `qwen2.5:72b` | Best quality responses | ~45 GB |
-| `phoenix-ft` | Fine-tuned on your conversations | same as base |
-| Any Ollama model | Custom use cases | varies |
-
-Any Ollama-compatible model works ÔÇö Qwen variants are recommended for the conversational style Phoenix is tuned for.
-
----
-
-<div align="center">
-
-## ­ƒºá Memory System
-
-</div>
-
-All session data is stored locally inside your project:
-
-```
-data/
-Ôö£ÔöÇÔöÇ phoenix_memory.db    # Conversations ┬À facts ┬À sessions (SQLite)
-Ôö£ÔöÇÔöÇ real_data.txt        # Auto-logged quality exchanges for fine-tuning
-ÔööÔöÇÔöÇ reminders.json       # Plugin-saved reminders
-```
-
-Facts Phoenix learns about you:
-
-```
-name ┬À age ┬À location ┬À job ┬À favourite_[anything] ┬À likes ┬À dislikes
-```
-
-Memory never leaves your machine.
-
----
-
-<div align="center">
-
-## ­ƒÄ¡ Personality Pipeline
-
-</div>
-
-Every reply passes through the Phoenix persona post-processor regardless of which model generated it:
-
-```
-Raw model output
-      Ôåô
-  Emotion-keyed filler opener   ("I hear you. " / "Oh wow, " / "HmmÔÇª ")
-      Ôåô
-  Thinking pause  (25% chance on mid-length replies)
-      Ôåô
-  Follow-up hook  (28% chance if reply doesn't end with "?")
-      Ôåô
-  Phoenix reply Ô£¿
-```
-
----
-
-<div align="center">
-
-## ­ƒöî Plugin System
-
-</div>
-
-Drop any `.py` file into the `plugins/` folder ÔÇö Phoenix loads it automatically on startup.
-
-```python
-# plugins/greet.py
-COMMAND     = "greet"
-DESCRIPTION = "Greet someone by name"
-USAGE       = "/greet <name>"
-
-def run(args: str, session_id: str = None) -> str:
-    name = args.strip() or "friend"
-    return f"Hey {name}! ­ƒæï Great to meet you."
-```
-
-Then in Phoenix:
-```
-You: /greet Alex
-Phoenix: Hey Alex! ­ƒæï Great to meet you.
-```
-
-**Built-in plugins:**
-
-| Command | Description |
-|:--------|:------------|
-| `/joke` | Random programming / AI joke |
-| `/calc <expr>` | Safe math evaluator ÔÇö supports `sqrt`, `sin`, `log`, `pi` |
-| `/remind <text>` | Save a reminder to `data/reminders.json` |
-| `/remind list` | View all saved reminders |
-| `/remind clear` | Clear all reminders |
-
----
-
-<div align="center">
-
-## ­ƒÄÖ´©Å Voice Input
-
-</div>
-
-Phoenix accepts audio via the `/voice` endpoint and transcribes it locally using [faster-whisper](https://github.com/SYSTRAN/faster-whisper) ÔÇö no cloud, no API key.
-
-```bash
-# Install
-pip install faster-whisper
-
-# Send audio (WAV or WebM)
-curl -X POST http://localhost:5000/voice -F "audio=@recording.wav"
-```
-
-Control the transcription model size via `WHISPER_MODEL`:
-
-| Value | RAM | Speed | Accuracy |
-|:------|:----|:------|:---------|
-| `tiny` *(default)* | ~400 MB | Fastest | Good |
-| `base` | ~500 MB | Fast | Better |
-| `small` | ~1 GB | Medium | Best for local |
-
-```bash
-WHISPER_MODEL=small python main.py
-```
-
----
-
-<div align="center">
-
-## ­ƒöü Fine-Tune Pipeline
-
-</div>
-
-After chatting with Phoenix, your best conversations are saved to `data/real_data.txt`. Use the fine-tune pipeline to bake them into a custom Ollama model:
-
-```bash
-# Check how many pairs you have
-python fine_tune_ollama.py --status
-
-# Build your fine-tuned model  (creates 'phoenix-ft' in Ollama)
-python fine_tune_ollama.py
-
-# Run Phoenix with your fine-tuned model
-OLLAMA_MODEL=phoenix-ft python main.py
-```
-
-Options:
-
-```bash
-python fine_tune_ollama.py --data data/real_data.txt \
-                           --model qwen2.5:14b \
-                           --out phoenix-ft-v2 \
-                           --max 40
-```
-
----
-
-<div align="center">
-
-## ­ƒôï API Endpoints
-
-</div>
-
-| Endpoint | Method | Description |
-|:---------|:-------|:------------|
-| `/` | GET | Web UI frontend |
-| `/chat` | POST | Send a message, get a reply |
-| `/voice` | POST | Send audio, get transcript + reply |
-| `/status` | GET | Ollama + model + plugin health check |
-| `/plugins` | GET | List all loaded plugin commands |
-| `/facts` | GET | All extracted user facts |
-| `/stats` | GET | Memory database statistics |
-| `/memory` | GET | Recent conversation turns |
-| `/history` | GET | Full session history |
-| `/reset_session` | POST | Clear current session memory |
-| `/save` | POST | No-op (Ollama manages weights) |
-
----
-
-<div align="center">
-
-## ­ƒº▒ Project Structure
-
-</div>
-
-```
-Phoenix/
-Ôöé
-Ôö£ÔöÇÔöÇ src/
-Ôöé   Ôö£ÔöÇÔöÇ inference.py          # Ollama/Qwen backend ┬À persona ┬À respond()
-Ôöé   Ôö£ÔöÇÔöÇ emotion.py            # Emotion detection ┬À temperature ┬À tone hints
-Ôöé   Ôö£ÔöÇÔöÇ memory.py             # SQLite memory ┬À fact extraction ┬À sessions
-Ôöé   Ôö£ÔöÇÔöÇ filters.py            # Reply quality gates ┬À scoring
-Ôöé   Ôö£ÔöÇÔöÇ web_ui.py             # Flask server ┬À all API routes ┬À plugin loader
-Ôöé   Ôö£ÔöÇÔöÇ model.py              # Legacy LSTM model definition (kept)
-Ôöé   Ôö£ÔöÇÔöÇ dataset.py            # Dataset utilities (kept)
-Ôöé   Ôö£ÔöÇÔöÇ train.py              # LSTM training script (kept)
-Ôöé   ÔööÔöÇÔöÇ fine_tune.py          # Transformer fine-tuning script (kept)
-Ôöé
-Ôö£ÔöÇÔöÇ plugins/                  # Drop .py files here to add slash commands
-Ôöé   Ôö£ÔöÇÔöÇ joke.py               # /joke
-Ôöé   Ôö£ÔöÇÔöÇ calc.py               # /calc
-Ôöé   Ôö£ÔöÇÔöÇ remind.py             # /remind
-Ôöé   ÔööÔöÇÔöÇ README.md             # How to write your own plugins
-Ôöé
-Ôö£ÔöÇÔöÇ frontend/
-Ôöé   Ôö£ÔöÇÔöÇ index.html            # Main UI (Three.js ┬À 3D samurai)
-Ôöé   Ôö£ÔöÇÔöÇ script.js             # Chat logic ┬À WebGL setup
-Ôöé   Ôö£ÔöÇÔöÇ style.css             # UI styles
-Ôöé   ÔööÔöÇÔöÇ assets/
-Ôöé       ÔööÔöÇÔöÇ 3dModel/
-Ôöé           ÔööÔöÇÔöÇ cyber_samurai.glb
-Ôöé
-Ôö£ÔöÇÔöÇ data/
-Ôöé   Ôö£ÔöÇÔöÇ phoenix_memory.db     # SQLite memory store
-Ôöé   Ôö£ÔöÇÔöÇ real_data.txt         # Auto-logged training pairs
-Ôöé   ÔööÔöÇÔöÇ reminders.json        # Plugin reminders
-Ôöé
-Ôö£ÔöÇÔöÇ models/                   # Legacy model weights (kept)
-Ôöé   ÔööÔöÇÔöÇ phoenix_transformer/
-Ôöé
-Ôö£ÔöÇÔöÇ main.py                   # Launcher ┬À pre-flight ┬À open browser
-Ôö£ÔöÇÔöÇ fine_tune_ollama.py       # Fine-tune pipeline (Modelfile approach)
-Ôö£ÔöÇÔöÇ requirements.txt          # flask ┬À requests  (faster-whisper optional)
-ÔööÔöÇÔöÇ README.md
-```
-
----
-
-<div align="center">
-
-## ­ƒÅù Architecture
+## 📁 Architecture
 
 </div>
 
 ```mermaid
 graph TD
-    User([­ƒæñ User]) -->|Message / Audio| WebUI[­ƒîÉ Flask Web UI]
-
-    WebUI --> Plugins[­ƒöî Plugin Router]
-    WebUI --> Inference[­ƒöÑ Inference Engine]
-
-    Inference --> Emotion[­ƒÿè Emotion Detector]
-    Inference --> Memory[­ƒºá Memory ┬À Facts]
-    Inference --> AI[­ƒñû AI Layer]
-    Inference --> Persona[­ƒÄ¡ Persona Post-Processor]
-    Inference --> Filters[­ƒöì Quality Filters]
-
-    WebUI --> Whisper[­ƒÄÖ´©Å Whisper ASR]
-
-    AI <--> Ollama[­ƒªÖ Ollama]
-    Ollama <--> Models[[­ƒö« Qwen 2.5 / phoenix-ft]]
-
-    Memory --> SQLite[(­ƒÆ¥ SQLite DB)]
-
-    style User fill:#238636,stroke:#2ea44f,stroke-width:2px,color:#fff
-    style WebUI fill:#1f6feb,stroke:#388bfd,stroke-width:2px,color:#fff
-    style Inference fill:#8957e5,stroke:#a371f7,stroke-width:2px,color:#fff
-    style Plugins fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style Whisper fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style Emotion fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style Memory fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style Filters fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style Persona fill:#6e7681,stroke:#8b949e,stroke-width:1px,color:#fff
-    style AI fill:#da3633,stroke:#f85149,stroke-width:2px,color:#fff
-    style Ollama fill:#d29922,stroke:#f2cc60,stroke-width:2px,color:#000
+    A["👤 User"] -->|Voice/Text| Web["🌐 Web UI"]
+    
+    Web -->|Route| CMD{Command Type?}
+    CMD -->|Chat| Brain["🧠 Brain"]
+    CMD -->|Plugin| Plugins["🔌 Plugins"]
+    CMD -->|Voice| Whisper["🎤 Whisper ASR"]
+    
+    Brain --> Emotion["😊 Emotion Detector"]
+    Brain --> Memory["💾 Memory + Facts"]
+    Brain --> LLM["🤖 Ollama/Qwen"]
+    Brain --> Filter["🔍 Quality Filter"]
+    Brain --> Persona["⚔️ Persona Processor"]
+    
+    Plugins --> Desktop["🖥️ Desktop Control"]
+    Plugins --> Files["📁 File Management"]
+    Plugins --> System["⚙️ System Actions"]
+    
+    Web --> Avatar["⚔️ Avatar Renderer"]
+    Avatar --> Anim["✨ Animation Engine"]
+    
+    Emotion --> Anim
+    Persona --> Anim
+    
+    Memory --> DB["💾 SQLite DB"]
+    
+    LLM --> Models["📦 Qwen 2.5 / phoenix-ft"]
+    
+    style A fill:#238636,stroke:#2ea44f,stroke-width:3px,color:#fff
+    style Web fill:#1f6feb,stroke:#388bfd,stroke-width:2px,color:#fff
+    style Brain fill:#8957e5,stroke:#a371f7,stroke-width:2px,color:#fff
+    style Avatar fill:#da3633,stroke:#f85149,stroke-width:3px,color:#fff
+    style Anim fill:#f97316,stroke:#fb923c,stroke-width:2px,color:#fff
+    style LLM fill:#d29922,stroke:#f2cc60,stroke-width:2px,color:#000
     style Models fill:#0e4429,stroke:#26a641,stroke-width:2px,color:#fff
-    style SQLite fill:#1f6feb,stroke:#388bfd,stroke-width:1px,color:#fff
+    style DB fill:#1f6feb,stroke:#388bfd,stroke-width:1px,color:#fff
 ```
 
 ---
 
 <div align="center">
 
-## ­ƒøú´©Å Roadmap
+## ⚔️ Avatar Animation System
 
 </div>
 
-### Phase 1 ÔÇö Core Ô£à
-- ­ƒƒú Custom LSTM dialogue model
-- ­ƒƒú Emotion detection + tone adaptation
-- ­ƒƒú SQLite memory + fact extraction
-- ­ƒƒú Phoenix voice persona post-processor
+Phoenix's avatar doesn't just render—it **performs**.
 
-### Phase 2 ÔÇö Intelligence Ô£à
-- ­ƒƒú Fine-tuned transformer (DialoGPT-based)
-- ­ƒƒú Quality filter pipeline + response scoring
-- ­ƒƒú Online learning from approved conversations
-- ­ƒƒú Dataset auto-logging
+### Emotion States
 
-### Phase 3 ÔÇö Web UI Ô£à
-- ­ƒƒú Flask API server
-- ­ƒƒú 3D cyber samurai frontend (Three.js)
-- ­ƒƒú Session management + history endpoints
+```
+😊 HAPPY        → Bouncing idle, head tilts, sword gleams
+😢 SAD          → Drooped posture, slow sway, dim lighting
+😠 ANGRY        → Aggressive stance, rapid breathing, glowing eyes
+😟 ANXIOUS      → Fidgeting, pacing, flickering aura
+🤔 CONFUSED     → Head tilt cycles, uncertain stance
+```
 
-### Phase 4 ÔÇö Ollama Migration Ô£à
-- ­ƒƒú Qwen 2.5 via Ollama replaces LSTM/transformer
-- ­ƒƒú Memory + persona + filters all preserved
-- ­ƒƒú Hot-swap any Ollama model via env var
+### Action States
 
-### Phase 5 ÔÇö Studio Ô£à
-- ­ƒƒú Voice input via local Whisper (`/voice` endpoint)
-- ­ƒƒú Multi-user isolated sessions (Flask cookie-based)
-- ­ƒö▓ Desktop Electron UI *(planned)*
+```
+🎤 LISTENING    → Head focused, ear toward user, gentle glow
+💭 THINKING     → Pacing with sword raised, particle effects
+⚡ EXECUTING    → Rapid movement, dramatic pose, energy burst
+🏆 SUCCESS      → Victory gesture, explosion of light particles
+❌ ERROR        → Defensive stance, red warning aura
+```
 
-### Phase 6 ÔÇö Ecosystem Ô£à
-- ­ƒƒú Plugin system (`plugins/` folder ┬À `/joke` `/calc` `/remind`)
-- ­ƒƒú Fine-tune pipeline on accumulated `real_data.txt`
-- ­ƒö▓ Mobile companion app *(planned)*
+### Idle Behaviors *(Phase 5)*
+
+```
+- Breathing cycles (chest rise/fall)
+- Sword spinning patterns
+- Ambient particle effects
+- Microexpressions (blinks, glances)
+- Meditation poses
+```
 
 ---
 
 <div align="center">
 
-## ­ƒöÆ Privacy
+## 🔮 Roadmap: Toward Autonomy
 
 </div>
 
-| Principle | Detail |
-|:----------|:-------|
-| ­ƒöÆ Zero telemetry | No analytics, no tracking, no crash reports |
-| ­ƒÅá Local inference | All AI runs via Ollama on your machine |
-| ­ƒÄÖ´©Å Local transcription | Voice processed by Whisper ÔÇö never sent to cloud |
-| ­ƒÆ¥ Local storage | `data/` in your project ÔÇö never synced |
-| ­ƒæü´©Å Open source | Audit every line |
-| Ô£ê´©Å Offline capable | Works with no internet connection |
+### Phase 1-4: Foundation ✅
+- Local AI brain
+- Emotion system
+- Memory persistence
+- Voice I/O
+- Plugin system
+- Basic avatar
+
+### **Phase 5: Avatar Comes Alive** 🔄
+- ✅ Emotion-driven animations
+- 🔄 Idle behavior loops
+- 🔄 Thinking/listening states
+- 🔄 Action visualization
+- 📋 Dynamic particle effects
+- 📋 Real-time gesture sync
+
+**Goal:** Avatar becomes emotionally expressive, not static.
+
+### **Phase 6: Desktop Integration** 📋
+- Application launcher + control
+- File system navigation
+- Volume/brightness control
+- Window management
+- Keyboard/mouse automation
+- Intent-based execution
+
+**Goal:** Samurai walks toward what it controls.
+
+### **Phase 7: Computer Vision** 📋
+- Screen capture + analysis
+- UI element detection
+- Object recognition
+- Icon identification
+- Real-time scene understanding
+- Context-aware decisions
+
+**Goal:** Phoenix sees what you see.
+
+### **Phase 8: Autonomous Agent** 📋
+- Task planning (multi-step)
+- Goal decomposition
+- Self-directed actions
+- Error recovery
+- Learning from execution
+- Proactive assistance
+
+**Goal:** Phoenix doesn't wait to be asked.
 
 ---
 
 <div align="center">
 
-## ­ƒøá´©Å What Changed
+## 📚 Usage
 
 </div>
 
-| File | Change |
-|:-----|:-------|
-| `src/inference.py` | `chat_step()` accepts `session_id` for per-user isolation |
-| `src/web_ui.py` | Multi-user sessions ┬À `/voice` endpoint ┬À plugin loader ┬À `/plugins` route |
-| `plugins/joke.py` | New ÔÇö `/joke` command |
-| `plugins/calc.py` | New ÔÇö `/calc` safe math evaluator |
-| `plugins/remind.py` | New ÔÇö `/remind` save ┬À list ┬À clear |
-| `fine_tune_ollama.py` | New ÔÇö Modelfile-based fine-tune pipeline |
-| `main.py` | Shows plugins + voice status on startup |
-| `requirements.txt` | Voice dep documented (opt-in) |
+### Chat Commands
+
+```
+/reset      Clear session memory
+/facts      Show learned facts about you
+/memory     View recent turns
+/stats      Database statistics
+exit        Quit Phoenix
+```
+
+### Plugin Commands
+
+```
+/joke                              Random AI/programming joke
+/calc (12 * 3) / sqrt(9)          Safe math evaluator
+/remind dentist tomorrow 6pm       Save reminder
+/remind list                       View all reminders
+/remind clear                      Clear reminders
+```
+
+### Voice Input *(requires faster-whisper)*
+
+```bash
+# Install
+pip install faster-whisper
+
+# Set model size (tiny|base|small)
+WHISPER_MODEL=small python main.py
+
+# Send audio to /voice endpoint
+curl -X POST http://localhost:5000/voice -F "audio=@recording.wav"
+```
 
 ---
 
 <div align="center">
 
-## ­ƒñØ Contributing
+## 🧬 Configuration
 
 </div>
 
-Contributions, bug reports, and pull requests are welcome.
+Override via environment variables:
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/my-feature`
-3. Make your changes
-4. Submit a pull request
+| Variable | Default | Purpose |
+|:---------|:--------|:--------|
+| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server |
+| `OLLAMA_MODEL` | `qwen2.5` | Model to use |
+| `PHOENIX_SECRET` | *(random)* | Flask session key |
+| `WHISPER_MODEL` | `tiny` | Voice transcription |
+| `ANIMATION_SPEED` | `1.0` | Avatar animation multiplier *(planned)* |
+| `EMOTION_INTENSITY` | `1.0` | Avatar expression intensity *(planned)* |
+
+```bash
+OLLAMA_MODEL=qwen2.5:14b WHISPER_MODEL=small python main.py
+```
+
+---
+
+<div align="center">
+
+## 🤖 Supported Models
+
+</div>
+
+| Model | Best For | VRAM | Speed |
+|:------|:---------|:-----|:------|
+| `qwen2.5` | Everyday chat | 4 GB | Fast ⚡ |
+| `qwen2.5:14b` | Complex reasoning | 9 GB | Medium |
+| `qwen2.5:72b` | Best quality | 45 GB | Slow |
+| `phoenix-ft` | Your conversations | Varies | Custom |
+
+Any Ollama model works. Qwen is recommended for conversational tone.
+
+---
+
+<div align="center">
+
+## 💾 Data & Privacy
+
+</div>
+
+All data stays on your machine:
+
+```
+data/
+├── phoenix_memory.db        # Conversations, facts, sessions
+├── real_data.txt            # High-quality pairs for fine-tuning
+└── reminders.json           # Plugin data
+```
+
+### Privacy Principles
+
+| Principle | How We Respect It |
+|:----------|:------------------|
+| **Zero telemetry** | No tracking, no logging, no calls home |
+| **Local inference** | 100% on your machine via Ollama |
+| **Local transcription** | Whisper runs locally, audio never leaves |
+| **Offline capable** | Works completely disconnected |
+| **Open source** | Audit every line |
+| **No accounts** | No login, no sync, no cloud backend |
+
+---
+
+<div align="center">
+
+## 🏗️ Project Structure
+
+</div>
+
+```
+phoenix/
+├── src/
+│   ├── inference.py         # Ollama chat + persona
+│   ├── emotion.py           # Feeling detector + tone
+│   ├── memory.py            # SQLite + fact learning
+│   ├── filters.py           # Quality gates + scoring
+│   ├── web_ui.py            # Flask server + routes
+│   └── model.py             # Legacy (kept)
+│
+├── plugins/                 # Drop .py files here
+│   ├── joke.py              # /joke command
+│   ├── calc.py              # /calc math evaluator
+│   ├── remind.py            # /remind save/list/clear
+│   └── README.md            # How to write plugins
+│
+├── frontend/
+│   ├── index.html           # Web UI (Three.js)
+│   ├── script.js            # Avatar + chat logic
+│   └── style.css            # Cyberpunk aesthetic
+│
+├── data/
+│   ├── phoenix_memory.db    # SQLite memory
+│   ├── real_data.txt        # Fine-tune pairs
+│   └── reminders.json       # Reminders
+│
+├── main.py                  # Launcher
+├── fine_tune_ollama.py      # Modelfile pipeline
+└── requirements.txt         # Dependencies
+```
+
+---
+
+<div align="center">
+
+## 🔌 API Reference
+
+</div>
+
+| Endpoint | Method | Purpose |
+|:---------|:-------|:--------|
+| `/` | GET | Web UI |
+| `/chat` | POST | Send message |
+| `/voice` | POST | Send audio |
+| `/status` | GET | Health check |
+| `/plugins` | GET | List commands |
+| `/facts` | GET | User facts |
+| `/memory` | GET | Recent turns |
+| `/stats` | GET | DB stats |
+| `/reset_session` | POST | Clear session |
+
+---
+
+<div align="center">
+
+## 🧠 Fine-Tuning Your Phoenix
+
+</div>
+
+As you chat, high-quality exchanges auto-save to `data/real_data.txt`. Bake them into a custom model:
+
+```bash
+# Check training pairs
+python fine_tune_ollama.py --status
+
+# Build phoenix-ft (custom model)
+python fine_tune_ollama.py
+
+# Run with your model
+OLLAMA_MODEL=phoenix-ft python main.py
+```
+
+---
+
+<div align="center">
+
+## 🛠️ Extending Phoenix
+
+</div>
+
+### Add a Plugin
+
+Create `plugins/weather.py`:
+
+```python
+COMMAND = "weather"
+DESCRIPTION = "Get weather forecast"
+USAGE = "/weather <city>"
+
+def run(args: str, session_id: str = None) -> str:
+    city = args.strip()
+    # Your logic here
+    return f"Weather in {city}: ☀️"
+```
+
+Then: `You: /weather Mumbai`
+
+### Add an Avatar Animation
+
+Edit `frontend/script.js` to add a new pose:
+
+```javascript
+const animations = {
+    happy: () => {
+        // Set samurai rotation, scale, colors
+    },
+    thinking: () => {
+        // Pacing, particle effects
+    },
+    // Add your custom state here
+};
+```
+
+---
+
+<div align="center">
+
+## 🌟 What Makes Phoenix Different
+
+</div>
+
+| Aspect | Phoenix | Typical AI |
+|:-------|:--------|:-----------|
+| **Where it runs** | Your machine | Cloud server |
+| **Who controls it** | You | Company |
+| **Privacy** | Guaranteed | Sold |
+| **Customization** | Unlimited | Limited |
+| **Avatar** | Living agent | Decoration |
+| **Task execution** | Yes *(planned)* | No |
+| **Cost** | Free | Subscriptions |
+| **Internet required** | No | Yes |
+
+---
+
+<div align="center">
+
+## 📖 Learning More
+
+</div>
+
+- **Architecture:** See `docs/ARCHITECTURE.md` *(planned)*
+- **Plugins:** Check `plugins/README.md`
+- **Fine-tuning:** Read `docs/FINE_TUNE.md` *(planned)*
+- **Avatar customization:** `frontend/README.md` *(planned)*
+
+---
+
+<div align="center">
+
+## 🤝 Contributing
+
+</div>
+
+Contributions welcome! Bug reports, PRs, ideas.
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/your-idea`
+3. Make changes
+4. Submit a PR
+
+---
+
+<div align="center">
+
+## 📜 License
+
+</div>
+
+MIT License — Use freely, modify, distribute.
 
 ---
 
@@ -612,10 +681,12 @@ Contributions, bug reports, and pull requests are welcome.
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=7c3aed&height=80&section=footer"/>
 
-Built by **~Vin ­ƒÆ£**
+**Built by ~Vin** ⚔️🐦‍🔥💜
 
-**Phoenix ÔÇö Your Local AI Companion**
+**Phoenix — A Digital Being, Not A Chatbot**
 
-*MIT License ┬À Open Source ┬À Local First ┬À Privacy Focused*
+*Local. Private. Autonomous. Alive.*
+
+**"Turn your desktop into a dojo. Let Phoenix live there."**
 
 </div>
