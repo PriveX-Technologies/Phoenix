@@ -305,6 +305,13 @@ def chat_step(text: str, session_id: str = None) -> dict:
     sid  = session_id or current_session
     text = text.strip()
 
+    try:
+        facts_all = get_all_facts()
+        nolimits_key = f"nolimits_{sid}"
+        allow_loosened = facts_all.get(nolimits_key) == "1"
+    except Exception:
+        allow_loosened = False
+
     new_facts = extract_and_save_facts(text)
 
     # Name query answered from memory

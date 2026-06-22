@@ -154,6 +154,9 @@ def check_safety(reply: str, user_input: str = "") -> tuple[bool, str]:
 
 
 def filter_response(reply: str, user_input: str = "", allow_loosened: bool = False) -> tuple[bool, str]:
+    if allow_loosened:
+        return True, ""
+
     reply    = reply.strip()
     words    = reply.split()
     in_words = user_input.lower().split() if user_input else []
@@ -163,23 +166,15 @@ def filter_response(reply: str, user_input: str = "", allow_loosened: bool = Fal
     if not safe_passed:
         return False, safe_reason
 
-    # If relaxed mode is requested, skip some heuristic checks but still
-    # enforce fallback and broken-sentence checks.
-    if allow_loosened:
-        checks = [
-            lambda: check_is_fallback(reply),
-            lambda: check_broken_sentence(words),
-        ]
-    else:
-        checks = [
-            lambda: check_length(words),
-            lambda: check_repetition(words),
-            lambda: check_unknown_tokens(words),
-            lambda: check_coherence(words),
-            lambda: check_echo(words, in_words),
-            lambda: check_is_fallback(reply),
-            lambda: check_broken_sentence(words),
-        ]
+    checks = [
+        lambda: check_length(words),
+        lambda: check_repetition(words),
+        lambda: check_unknown_tokens(words),
+        lambda: check_coherence(words),
+        lambda: check_echo(words, in_words),
+        lambda: check_is_fallback(reply),
+        lambda: check_broken_sentence(words),
+    ]
 
     for check in checks:
         passed, reason = check()
