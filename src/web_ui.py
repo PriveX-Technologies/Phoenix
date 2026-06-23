@@ -52,8 +52,8 @@ get_phoenix()
 
 # ── Voice modules ─────────────────────────────────────────────────────────────
 try:
-    import listen
-    import speak
+    from voice import listen
+    from voice import speak
     VOICE_AVAILABLE = listen.get_whisper_available()
 except ImportError as e:
     print(f"⚠️  Voice modules not available: {e}")

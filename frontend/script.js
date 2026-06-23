@@ -9,7 +9,7 @@ let voiceModule = null;
 async function initVoiceModule() {
     try {
         // Import all voice functions
-        const voiceImport = await import('./voice.js');
+        const voiceImport = await import('./Voice.js');
         const { initVoice, speakReply } = voiceImport;
         voiceModule = { initVoice, speakReply };
         
@@ -248,3 +248,4 @@ if (document.readyState === 'loading') {
 window.sendMessage = sendMessage;
 window.toggleFacts = toggleFacts;
 window.initVoiceModule = initVoiceModule;
+

@@ -23,7 +23,7 @@ model_name = os.environ.get("OLLAMA_MODEL", "qwen2.5")
 host       = os.environ.get("OLLAMA_HOST",  "http://localhost:11434")
 
 print("╔══════════════════════════════════════════╗")
-print("║           Phoenix AI  –  Ollama           ║")
+print("║           Phoenix AI  –  Ollama          ║")
 print("╚══════════════════════════════════════════╝")
 print(f"  Backend : {host}")
 print(f"  Model   : {model_name}")
