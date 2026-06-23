@@ -1,9 +1,12 @@
 """
-web_ui.py  –  Phoenix Flask server
-  • Multi-user sessions  (each browser tab gets its own isolated session)
-  • Voice transcription  (/voice endpoint — requires faster-whisper)
-  • Plugin commands       (/plugin/<name> endpoint)
-  • All original routes preserved
+web_ui.py  –  Phoenix Flask server with voice integration
+
+Features:
+  • Multi-user sessions (each browser tab gets isolated context)
+  • Voice input transcription via /voice endpoint (faster-whisper)
+  • Voice output with emotion-aware modifiers
+  • Plugin system with command routing
+  • Error recovery and fallback handling
 """
 
 import traceback
@@ -47,6 +50,15 @@ def get_phoenix():
 
 get_phoenix()
 
+# ── Voice modules ─────────────────────────────────────────────────────────────
+try:
+    import listen
+    import speak
+    VOICE_AVAILABLE = listen.get_whisper_available()
+except ImportError as e:
+    print(f"⚠️  Voice modules not available: {e}")
+    VOICE_AVAILABLE = False
+
 # ── Plugin loader ─────────────────────────────────────────────────────────────
 import importlib.util, pathlib
 
@@ -71,10 +83,6 @@ def load_plugins():
 load_plugins()
 
 # ── Multi-user session helpers ────────────────────────────────────────────────
-# Each browser session gets its own Phoenix session_id + turn counter.
-# These are stored in Flask's signed cookie session (server-side state in
-# the inference module is keyed by session_id so contexts never bleed).
-
 def _get_user_session_id() -> str:
     """Return (creating if needed) a stable session_id for this browser tab."""
     if "phoenix_session_id" not in session:
@@ -130,9 +138,14 @@ def chat():
         if cmd in _plugins:
             try:
                 reply = _plugins[cmd].run(args, session_id=session_id)
-                return jsonify({"reply": reply, "emotion": "neutral",
-                                "tone_hint": "", "learned": False,
-                                "new_facts": {}, "score": 1.0})
+                return jsonify({
+                    "reply": reply,
+                    "emotion": "neutral",
+                    "tone_hint": "",
+                    "learned": False,
+                    "new_facts": {},
+                    "score": 1.0
+                })
             except Exception as e:
                 return jsonify({"error": f"Plugin error: {e}"}), 500
 
@@ -141,20 +154,39 @@ def chat():
         result = inf.chat_step(text, session_id=session_id,
                                allow_loosened=allow_loosened)
         _inc_user_turn()
-        return jsonify({
+        
+        # Include TTS payload if speak module available
+        tts_payload = None
+        if VOICE_AVAILABLE:
+            try:
+                voice_config = data.get("voice_config")
+                tts_payload = speak.format_tts_payload(
+                    result["reply"],
+                    emotion=result.get("emotion", "neutral"),
+                    voice_config=voice_config
+                )
+            except Exception as e:
+                print(f"⚠️  TTS payload error: {e}")
+        
+        response = {
             "reply":     result["reply"],
-            "emotion":   result["emotion"],
+            "emotion":   result.get("emotion", "neutral"),
             "tone_hint": result.get("tone_hint", ""),
-            "learned":   result["learned"],
+            "learned":   result.get("learned", False),
             "new_facts": result.get("new_facts", {}),
             "score":     result.get("score", 0),
-        })
+        }
+        
+        if tts_payload:
+            response["tts"] = tts_payload
+        
+        return jsonify(response)
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": f"Generation error: {e}"}), 500
 
 
-# ── /voice  (Phase 5.2 — Whisper transcription) ───────────────────────────────
+# ── /voice  (Phase 5.2 — Whisper transcription + TTS) ────────────────────────
 @app.route("/voice", methods=["POST"])
 def voice():
     """
@@ -164,53 +196,100 @@ def voice():
     curl -X POST http://localhost:5000/voice \
          -F "audio=@recording.wav"
     """
+    if not VOICE_AVAILABLE:
+        return jsonify({
+            "error": "Voice transcription not available",
+            "fix": "pip install faster-whisper"
+        }), 501
+
     if "audio" not in request.files:
         return jsonify({"error": "No audio file provided"}), 400
 
-    try:
-        from faster_whisper import WhisperModel
-    except ImportError:
-        return jsonify({
-            "error": "faster-whisper not installed.",
-            "fix":   "pip install faster-whisper"
-        }), 501
-
+    session_id = _get_user_session_id()
     audio_file = request.files["audio"]
     tmp_path   = f"/tmp/phoenix_voice_{uuid.uuid4().hex}.wav"
-    audio_file.save(tmp_path)
-
+    
     try:
-        # Load tiny model on CPU — fast, low RAM
-        whisper_size = os.environ.get("WHISPER_MODEL", "tiny")
-        model        = WhisperModel(whisper_size, device="cpu", compute_type="int8")
-        segments, _  = model.transcribe(tmp_path, beam_size=5)
-        transcript   = " ".join(s.text.strip() for s in segments).strip()
+        # Save temp audio file
+        audio_file.save(tmp_path)
+        
+        # Transcribe audio
+        transcript, meta = listen.transcribe_audio(
+            tmp_path,
+            language="en",
+            confidence_threshold=0.5
+        )
+        
+        if not transcript:
+            error_msg = meta.get("error", "Unknown transcription error")
+            fallback = listen.get_fallback_response()
+            
+            return jsonify({
+                "error": error_msg,
+                "transcript": "",
+                "fallback_reply": fallback,
+                "metadata": meta
+            }), 422
+        
+        # Process transcribed text through chat
+        inf, err = get_phoenix()
+        if err or inf is None:
+            return jsonify({
+                "transcript": transcript,
+                "error": f"Model not loaded: {err}"
+            }), 500
+        
+        # Chat with voice flag (loosened filtering)
+        result = inf.chat_step(
+            transcript,
+            session_id=session_id,
+            allow_loosened=True  # Voice input is usually looser
+        )
+        _inc_user_turn()
+        
+        # Build response with TTS
+        tts_payload = None
+        if VOICE_AVAILABLE:
+            try:
+                tts_payload = speak.format_tts_payload(
+                    result["reply"],
+                    emotion=result.get("emotion", "neutral")
+                )
+            except Exception as e:
+                print(f"⚠️  TTS payload error: {e}")
+        
+        response = {
+            "transcript": transcript,
+            "reply":      result["reply"],
+            "emotion":    result.get("emotion", "neutral"),
+            "tone_hint":  result.get("tone_hint", ""),
+            "learned":    result.get("learned", False),
+            "new_facts":  result.get("new_facts", {}),
+            "score":      result.get("score", 0),
+            "confidence": meta.get("confidence", 0),
+            "metadata":   meta,
+        }
+        
+        if tts_payload:
+            response["tts"] = tts_payload
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        print(f"❌ Voice endpoint error: {e}")
+        traceback.print_exc()
+        return jsonify({
+            "error": f"Voice processing failed: {str(e)}",
+            "fallback_reply": listen.get_fallback_response()
+        }), 500
+    
     finally:
-        os.unlink(tmp_path)
-
-    if not transcript:
-        return jsonify({"error": "Could not transcribe audio"}), 422
-
-    # Reuse chat logic
-    inf, err = get_phoenix()
-    if err or inf is None:
-        return jsonify({"transcript": transcript,
-                        "error": f"Model not loaded: {err}"}), 500
-
-    session_id = _get_user_session_id()
-    result     = inf.chat_step(transcript, session_id=session_id,
-                               allow_loosened=True)
-    _inc_user_turn()
-
-    return jsonify({
-        "transcript": transcript,
-        "reply":      result["reply"],
-        "emotion":    result["emotion"],
-        "tone_hint":  result.get("tone_hint", ""),
-        "learned":    result["learned"],
-        "new_facts":  result.get("new_facts", {}),
-        "score":      result.get("score", 0),
-    })
+        # Clean up temp file
+        try:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        except Exception as e:
+            print(f"⚠️  Temp file cleanup error: {e}")
 
 
 # ── /plugins  (list available plugins) ───────────────────────────────────────
@@ -218,9 +297,11 @@ def voice():
 def list_plugins():
     return jsonify({
         "plugins": [
-            {"command": f"/{cmd}",
-             "description": getattr(mod, "DESCRIPTION", ""),
-             "usage": getattr(mod, "USAGE", f"/{cmd} [args]")}
+            {
+                "command": f"/{cmd}",
+                "description": getattr(mod, "DESCRIPTION", ""),
+                "usage": getattr(mod, "USAGE", f"/{cmd} [args]")
+            }
             for cmd, mod in _plugins.items()
         ]
     })
@@ -233,8 +314,11 @@ def facts():
     inf, err = get_phoenix()
     if err or inf is None:
         return jsonify({"facts": {}})
-    from memory import get_all_facts
-    return jsonify({"facts": get_all_facts()})
+    try:
+        from memory import get_all_facts
+        return jsonify({"facts": get_all_facts()})
+    except Exception:
+        return jsonify({"facts": {}})
 
 @app.route("/stats")
 def stats():
@@ -298,6 +382,7 @@ def status():
             ollama_mdl = inf.OLLAMA_MODEL
         except Exception:
             pass
+    
     return jsonify({
         "ok":                 err is None,
         "error":              err,
@@ -309,20 +394,14 @@ def status():
         "session_id":         _get_user_session_id(),
         "turn_count":         _get_user_turn(),
         "plugins_loaded":     list(_plugins.keys()),
-        "voice_available":    _whisper_available(),
+        "voice_available":    VOICE_AVAILABLE,
     })
-
-def _whisper_available() -> bool:
-    try:
-        import faster_whisper  # noqa
-        return True
-    except ImportError:
-        return False
 
 
 if __name__ == "__main__":
     print("\n🔥 Phoenix Web UI (multi-user · voice · plugins)")
     print(f"   Frontend : {FRONTEND_DIR}")
     print(f"   Plugins  : {list(_plugins.keys()) or 'none'}")
+    print(f"   Voice    : {'✅ enabled' if VOICE_AVAILABLE else '⚠️  disabled'}")
     print("   Visit    : http://localhost:5000\n")
     app.run(debug=False, host="0.0.0.0", port=5000)
