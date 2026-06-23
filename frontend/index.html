@@ -1566,6 +1566,7 @@
             }
 
             function initVoiceInput() {
+                console.log("Recognition created:", recognition);
                 recognition = createSpeechRecognition(
                     async (transcript) => {
                         isVoiceListening = false;
@@ -1747,22 +1748,20 @@
 
             if (voiceListenBtn) {
                 voiceListenBtn.addEventListener("click", () => {
-                    if (!recognition) return;
-                    if (isVoiceListening) {
-                        recognition.stop();
-                        isVoiceListening = false;
-                        updateVoiceButton();
-                        setVoiceStatus("Stopping voice input...");
-                    } else {
-                        try {
-                            recognition.start();
-                            isVoiceListening = true;
-                            updateVoiceButton();
-                            setVoiceStatus("Listening...");
-                        } catch (err) {
-                            setVoiceStatus("Voice start failed.");
-                            console.error("SpeechRecognition start error", err);
-                        }
+
+                    console.log("BUTTON PRESSED");
+                    console.log(recognition);
+
+                    if (!recognition) {
+                        console.log("NO RECOGNITION");
+                        return;
+                    }
+
+                    try {
+                        recognition.start();
+                        console.log("START CALLED");
+                    } catch (err) {
+                        console.error(err);
                     }
                 });
             }
@@ -2123,13 +2122,14 @@
             }
 
             // ── Voice panel collapse toggle ────────────────────────────────────
-            function toggleVoicePanel() {
+            window.toggleVoicePanel = function () {
                 const body = document.getElementById("voice-body");
                 const chevron = document.getElementById("voice-chevron");
                 const isOpen = !body.classList.contains("collapsed");
+
                 body.classList.toggle("collapsed", isOpen);
                 chevron.classList.toggle("open", !isOpen);
-            }
+            };
 
             // ══════════════════════════════════════════════════════════════════
             //  GAZE TRACKING — avatar "looks at" mouse cursor

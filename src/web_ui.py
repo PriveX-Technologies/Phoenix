@@ -12,7 +12,13 @@ Features:
 import traceback
 import uuid
 import os
+import sys
 from flask import Flask, render_template, request, jsonify, send_from_directory, session
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+
 
 FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
 
@@ -54,11 +60,21 @@ get_phoenix()
 try:
     from voice import listen
     from voice import speak
-    VOICE_AVAILABLE = listen.get_whisper_available()
-except ImportError as e:
-    print(f"⚠️  Voice modules not available: {e}")
-    VOICE_AVAILABLE = False
 
+    print("listen imported")
+    print("speak imported")
+
+    VOICE_AVAILABLE = listen.get_whisper_available()
+
+    print("VOICE_AVAILABLE =", VOICE_AVAILABLE)
+
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+
+    print(f"⚠️ Voice modules failed: {e}")
+
+    VOICE_AVAILABLE = False
 # ── Plugin loader ─────────────────────────────────────────────────────────────
 import importlib.util, pathlib
 

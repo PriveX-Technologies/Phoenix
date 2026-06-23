@@ -1,22 +1,24 @@
 export function createSpeechRecognition(onResult, onState) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return null;
+  console.log("voice-helper loaded");
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  console.log("SpeechRecognition =", SpeechRecognition);
+
+  if (!SpeechRecognition) {
+    console.log("NO SPEECH API");
+    return null;
+  }
 
   const recognition = new SpeechRecognition();
+
+  console.log("Created recognition:", recognition);
+
   recognition.continuous = false;
   recognition.interimResults = false;
-  recognition.lang = 'en-US';
-  recognition.maxAlternatives = 1;
-
-  recognition.onstart = () => onState('listening');
-  recognition.onspeechstart = () => onState('hearing');
-  recognition.onspeechend = () => onState('processing');
-  recognition.onend = () => onState('idle');
-  recognition.onerror = e => onState('error:' + e.error);
-  recognition.onresult = event => {
-    const transcript = event.results[0][0].transcript.trim();
-    onResult(transcript);
-  };
+  recognition.lang = "en-US";
 
   return recognition;
 }
