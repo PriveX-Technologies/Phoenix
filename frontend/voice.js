@@ -458,6 +458,19 @@ export function toggleVoicePanel() {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// GLOBAL EXPORTS (for HTML onclick handlers)
+// ══════════════════════════════════════════════════════════════════════════════
+// These functions are called directly from HTML: onclick="functionName()"
+// They MUST be available on the window object
+
+if (typeof window !== 'undefined') {
+    window.toggleVoicePanel = toggleVoicePanel;
+    window.startListening = startListening;
+    window.stopListening = stopListening;
+    window.speak = speak;
+}
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // INTEGRATION HOOKS (called from main chat handler)

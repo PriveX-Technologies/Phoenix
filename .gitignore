@@ -12,3 +12,5 @@ phoenix_ft_checkpoints/*
 *.pth
 *.bin
 *.safetensors
+
+data/real_data.txt

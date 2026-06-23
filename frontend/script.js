@@ -8,12 +8,23 @@ let voiceModule = null;
 
 async function initVoiceModule() {
     try {
-        const { initVoice, speakReply } = await import('./voice.js');
+        // Import all voice functions
+        const voiceImport = await import('./voice.js');
+        const { initVoice, speakReply } = voiceImport;
         voiceModule = { initVoice, speakReply };
+        
+        // Initialize voice system
         voiceModule.initVoice();
-        console.log("✅ Voice module loaded");
+        
+        // Verify global functions are accessible
+        if (window.toggleVoicePanel && window.startListening && window.speak) {
+            console.log("✅ Voice module loaded + global functions exposed");
+        } else {
+            console.warn("⚠️  Voice module loaded but some functions not exposed globally");
+        }
     } catch (e) {
-        console.warn("⚠️  Voice module load error:", e);
+        console.error("❌ Voice module load error:", e);
+        console.error("   Stack:", e.stack);
         voiceModule = null;
     }
 }
